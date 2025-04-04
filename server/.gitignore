@@ -1,0 +1,10 @@
+# Ignore .env file (contains sensitive data)
+.env
+
+# Ignore Node.js dependencies
+node_modules/
+
+# Other common ignores (optional)
+.DS_Store
+dist/
+*.log
