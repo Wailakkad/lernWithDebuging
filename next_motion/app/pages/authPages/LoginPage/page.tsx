@@ -1,89 +1,75 @@
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+"use client";
+import React from "react";
+import { WavyBackground } from "@/components/ui/wavy-background";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { useId } from "react";
+import Link from "next/link";
 
-function Component() {
-  const id = useId();
+export default function WavyBackgroundDemo() {
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="outline">Sign up</Button>
-      </DialogTrigger>
-      <DialogContent>
-        <div className="flex flex-col items-center gap-2">
-          <div
-            className="flex size-11 shrink-0 items-center justify-center rounded-full border border-border"
-            aria-hidden="true"
-          >
-            <svg
-              className="stroke-zinc-800 dark:stroke-zinc-100"
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              viewBox="0 0 32 32"
-              aria-hidden="true"
-            >
-              <circle cx="16" cy="16" r="12" fill="none" strokeWidth="8" />
-            </svg>
-          </div>
-          <DialogHeader>
-            <DialogTitle className="sm:text-center">Sign up Origin UI</DialogTitle>
-            <DialogDescription className="sm:text-center">
-              We just need a few details to get you started.
-            </DialogDescription>
-          </DialogHeader>
-        </div>
-
-        <form className="space-y-5">
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor={`${id}-name`}>Full name</Label>
-              <Input id={`${id}-name`} placeholder="Matt Welsh" type="text" required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor={`${id}-email`}>Email</Label>
-              <Input id={`${id}-email`} placeholder="hi@yourcompany.com" type="email" required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor={`${id}-password`}>Password</Label>
-              <Input
-                id={`${id}-password`}
-                placeholder="Enter your password"
-                type="password"
-                required
-              />
-            </div>
-          </div>
-          <Button type="button" className="w-full">
-            Sign up
-          </Button>
-        </form>
-
-        <div className="flex items-center gap-3 before:h-px before:flex-1 before:bg-border after:h-px after:flex-1 after:bg-border">
-          <span className="text-xs text-muted-foreground">Or</span>
-        </div>
-
-        <Button variant="outline">Continue with Google</Button>
-
-        <p className="text-center text-xs text-muted-foreground">
-          By signing up you agree to our{" "}
-          <a className="underline hover:no-underline" href="#">
-            Terms
-          </a>
-          .
+    <WavyBackground className="max-w-4xl mx-auto pb-10">
+      <div className="flex flex-col items-center">
+        <p className="text-2xl md:text-4xl lg:text-6xl text-white font-bold inter-var text-center mb-2">
+          LearnWith Debugging
         </p>
-      </DialogContent>
-    </Dialog>
+        <p className="text-base md:text-xl text-white/80 font-normal inter-var text-center mb-8">
+          Master the art of debugging with real-time analysis
+        </p>
+        
+        <Card className="w-full max-w-[500px] bg-white text-black shadow-lg rounded-xl border-0">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-3xl font-bold text-center text-black">Welcome Back, Developer</CardTitle>
+            <CardDescription className="text-center text-gray-600 text-lg">
+              Continue your debugging journey where you left off
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form>
+              <div className="grid gap-5">
+                <div className="grid gap-2">
+                  <Label htmlFor="email" className="text-black font-medium">Email</Label>
+                  <Input 
+                    id="email" 
+                    type="email" 
+                    placeholder="developer@example.com" 
+                    className="border-gray-300 rounded-lg py-6" 
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <div className="flex justify-between items-center">
+                    <Label htmlFor="password" className="text-black font-medium">Password</Label>
+                    <Link href="#" className="text-sm text-black hover:underline">
+                      Forgot password?
+                    </Link>
+                  </div>
+                  <Input 
+                    id="password" 
+                    type="password" 
+                    className="border-gray-300 rounded-lg py-6" 
+                  />
+                </div>
+              </div>
+            </form>
+          </CardContent>
+          <CardFooter className="flex flex-col gap-4">
+            <Button className="w-full bg-black hover:bg-[#90e0ef] hover:text-black text-white  py-6 rounded-lg text-lg font-medium duration-200">
+              Sign In
+            </Button>
+            <div className="text-center w-full">
+              <span className="text-gray-600">New to LearnWith Debugging? </span>
+              <Link href="/pages/authPages/RegisterPage" className="text-black hover:underline font-medium">
+                Create an account
+              </Link>
+            </div>
+          </CardFooter>
+        </Card>
+        
+        <p className="text-base md:text-lg mt-6 text-white font-normal inter-var text-center">
+          Debug smarter, not harder with our AI-powered tools
+        </p>
+      </div>
+    </WavyBackground>
   );
 }
-
-export { Component };

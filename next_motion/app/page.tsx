@@ -1,7 +1,7 @@
 "use client";
 
 import {LandingHero} from "@/component/Home";
-import {FaqSectionDemo} from "@/component/Q&R";
+
 import {HeroScrollDemo} from "@/component/About";
 import {AnimatedCardBackgroundHover} from "@/component/Missions";
 
@@ -11,7 +11,7 @@ export default function Home() {
       <LandingHero/>
       <HeroScrollDemo/>
       <AnimatedCardBackgroundHover/>
-      <FaqSectionDemo/>
+      
    </div>
   );
 }

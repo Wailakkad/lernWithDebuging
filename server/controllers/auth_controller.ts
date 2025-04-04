@@ -3,14 +3,13 @@ import UserModel from '../database/models/User'; // Adjust the path as needed
 import bcrypt from 'bcryptjs'; // Import bcrypt for password hashing
 import jwt from "jsonwebtoken"; // Import JWT for token generation
 
-
 interface RegisterUserRequest {
-    username: string; // Optional: Add username if needed
+    username: string;
     email: string;
-    passwordHash: string;
-    developerType: 'full-stack' | 'front-end' | 'back-end';
-    experienceLevel: 'beginner' | 'intermediate' | 'advanced' | 'professional';
-}
+    password: string; // Changed from passwordHash to password
+    developerType: string;
+    experienceLevel: string;
+  }
 interface LoginUserRequest {
     email: string;
     password: string;
@@ -81,7 +80,6 @@ export const Login = async (req: Request<{}, {}, LoginUserRequest>, res: Respons
             message: 'Login successful.', 
             user: userResponse 
         });
-
     } catch (error) {
         console.error('Login error:', error);
         res.status(500).json({ message: 'Internal server error.' });
@@ -90,41 +88,53 @@ export const Login = async (req: Request<{}, {}, LoginUserRequest>, res: Respons
 
 
 
-export const Register = async (req: Request<{}, {} , RegisterUserRequest> , res: Response): Promise<void> => {
+export const Register = async (req: Request<{}, {}, RegisterUserRequest>, res: Response): Promise<void> => {
     try {
-        const { username, email, passwordHash , developerType , experienceLevel } = req.body;
+        const { username, email, password, developerType, experienceLevel } = req.body;
 
         // Validate required fields
-        if (!username || !email || !passwordHash || !developerType || !experienceLevel) {
-            res.status(400).json({ message: 'Name, email, and password are required.' });
+        if (!username || !email || !password || !developerType || !experienceLevel) {
+             res.status(400).json({ message: 'All fields are required. waylii' });
             return;
         }
 
-        // Check if user already exists
+        // Check if user exists
         const existingUser = await UserModel.findOne({ email });
         if (existingUser) {
-            res.status(400).json({ message: 'User already exists.' });
-            return;
+             res.status(400).json({ message: 'User already exists. wayliii' });
+             return;
         }
-        const HashedPassword = await bcrypt.hash(passwordHash, 10); // Hash the password with bcrypt    
 
-        // Create a new user object
+        // Hash the password
+        const saltRounds = 10;
+        const passwordHash = await bcrypt.hash(password, saltRounds);
+
+        // Create user
         const newUser = new UserModel({
             username,
             email,
-            passwordHash : HashedPassword,
+            passwordHash,
             developerType,
-            experienceLevel,
-            
+            experienceLevel
         });
 
-        // Save the user to the database
         const savedUser = await newUser.save();
 
-        // Respond with the saved user
-        res.status(201).json({ message: 'User registered successfully.', user: savedUser });
+        if (!savedUser) {
+            res.status(500).json({ message: 'Failed to create user.' });
+            return;
+        }
+
+        if (savedUser) {
+            res.status(201).json({ message: 'User created successfully.', user: savedUser });
+            return;
+        }
+
+      
+        
     } catch (error) {
-        console.error('Error adding user:', error);
+        console.error('Registration error:', error);
         res.status(500).json({ message: 'Internal server error.' });
+        return;
     }
-}
+};

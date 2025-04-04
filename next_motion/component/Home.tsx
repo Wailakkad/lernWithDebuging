@@ -197,7 +197,7 @@ function LandingHero() {
               transition: { type: "spring", damping: 30, stiffness: 400 },
             }}
           >
-            <Link href="/pages/debuging_page">
+            <Link href="/pages/authPages/RegisterPage">
               Try it free <span className="font-serif ml-1">→</span>
             </Link>
           </motion.button>
