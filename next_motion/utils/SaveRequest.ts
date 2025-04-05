@@ -4,7 +4,6 @@ import axios from "axios";
 import { toast } from "sonner"; // Optional: For user notifications
 
 interface SaveRequestParams {
-  userId: string; // Added userId to match the backend format
   originalCode: string;
   correctedCode: string;
   errorType: string;
@@ -21,18 +20,21 @@ interface SaveRequestParams {
 
 export const SaveSubmissions = async (data: SaveRequestParams): Promise<void> => {
   try {
-    const response = await axios.post("http://localhost:3001/api/actions/saveSubmission", data); // Updated endpoint to match the backend route
+    const response = await axios.post(
+      "http://localhost:3001/api/actions/saveSubmission", 
+      data,
+      {
+        withCredentials: true // THIS IS CRUCIAL
+      }
+    );
 
-    if (response.status === 201) { // 201 indicates resource creation
+    if (response.status === 201) {
       toast.success("Submission saved successfully!");
-      console.log("Submission saved successfully:", response.data);
     } else {
       toast.error("Failed to save submission.");
-      console.error("Failed to save submission:", response.statusText);
     }
-  } catch (error) {
-    console.error("Error saving submission:", error);
-    toast.error("Error saving submission. Please try again.");
-    throw error;
+  } catch (error : any) {
+    console.error("Error:", error);
+    toast.error(error.response?.data?.message || "Error saving submission");
   }
 };

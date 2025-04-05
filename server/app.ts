@@ -14,7 +14,8 @@ app.use(cookieParser());
 
 app.use(cors({
     origin: 'http://localhost:3000', // Your frontend URL
-    credentials: true
+    credentials: true,
+    exposedHeaders: ['set-cookie'] // Sometimes needed
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

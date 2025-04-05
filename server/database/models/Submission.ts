@@ -11,7 +11,7 @@ interface IExerciseRequest {
 }
 
 interface ISubmission extends Document {
-    userId: string ; // Changed from ObjectId to String
+    userId: mongoose.Schema.Types.ObjectId; // Changed to ObjectId
     originalCode: string;
     errorType: string;
     language: string;
@@ -33,7 +33,7 @@ const ExerciseRequestSchema = new Schema<IExerciseRequest>({
 });
 
 const SubmissionSchema = new Schema<ISubmission>({
-    userId: { type: String, required: true },
+    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true }, // Updated to ObjectId and added reference to User
     originalCode: { type: String, required: true },
     errorType: { type: String, required: true },
     language: { type: String, required: true },

@@ -1,10 +1,14 @@
 import exprees from 'express';
 
 const router = exprees.Router();
-import {saveSubmission} from '../../controllers/Actions';
+import {saveSubmission , saveExercices} from '../../controllers/Actions';
+import { authVerify } from '../../utils/authVerify';
 
 
-router.post('/saveSubmission', saveSubmission);
+router.post('/saveSubmission', authVerify , saveSubmission);
+router.post('/saveExercices', authVerify , saveExercices);
+
+
 
 
 export default router;

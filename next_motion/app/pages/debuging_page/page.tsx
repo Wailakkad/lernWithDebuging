@@ -40,7 +40,6 @@ interface DebugRequest {
 
 interface DebugExercise {
   description: string;
-  code: string;
   solution?: string;
 }
 
@@ -87,7 +86,7 @@ export default function CodeDebugger() {
   
   // Exercise generation state
   const [generateExercises, setGenerateExercises] = useState(false);
-  const [exercisesCount, setExercisesCount] = useState(0);
+  const [exercisesCount, setExercisesCount] = useState(3);
   const [exercisesLevel, setExercisesLevel] = useState<'beginner' | 'intermediate' | 'advanced'>('beginner');
   
   // Expanded exercises state
@@ -166,7 +165,6 @@ export default function CodeDebugger() {
       };
       
       await SaveSubmissions({
-        userId: 'user123',
         originalCode: result.originalCode || '', // ensure string
         correctedCode: result.correctedCode || '', // ensure string
         errorType: typeof error === 'string' ? error : 'Unknown error', // force string
@@ -185,6 +183,25 @@ export default function CodeDebugger() {
     } catch (err) {
       console.error('Error saving submission:', err);
       toast.error('Failed to save submission');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+
+  const hadleExercisesSave = async () => {
+    if (!isDebugResponse(result) || !result.exercises || result.exercises.length === 0) {
+      toast.error('No exercises to save');
+      return;
+    }
+  
+    setIsSaving(true);
+    try {
+      // Add logic to save exercises here
+      toast.success('Exercises saved successfully!');
+    } catch (err) {
+      console.error('Error saving exercises:', err);
+      toast.error('Failed to save exercises');
     } finally {
       setIsSaving(false);
     }
@@ -280,60 +297,63 @@ export default function CodeDebugger() {
                     />
                   </div>
 
-                  {/* Exercise Generation Section */}
-                  <Card className="bg-gray-800/50 border-gray-700">
-                    <CardHeader className="p-4">
-                      <div className="flex items-center space-x-3">
-                        <Switch
-                          id="generateExercises"
-                          checked={generateExercises}
-                          onCheckedChange={setGenerateExercises}
-                        />
-                        <Label htmlFor="generateExercises">Generate Practice Exercises</Label>
-                      </div>
-                    </CardHeader>
-                    
-                    {generateExercises && (
-                      <CardContent className="pt-0 space-y-4 pl-12">
-                        <div className="space-y-2">
-                          <Label htmlFor="exercisesCount" className="text-xs">
-                            Number of Exercises (1-10)
-                          </Label>
-                          <Input
-                            type="number"
-                            id="exercisesCount"
-                            min="1"
-                            max="10"
-                            value={exercisesCount}
-                            onChange={(e) => setExercisesCount(parseInt(e.target.value))}
-                            className="bg-gray-700/70 border-gray-600"
-                          />
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label className="text-xs">Difficulty Level</Label>
-                          <div className="flex gap-2 flex-wrap">
-                            {difficultyLevels.map((level) => (
-                              <Button
-                                key={level.value}
-                                type="button"
-                                variant={exercisesLevel === level.value ? 'secondary' : 'ghost'}
-                                size="sm"
-                                className={`px-3 rounded-full text-xs ${
-                                  exercisesLevel === level.value 
-                                    ? 'bg-green-500/20 text-green-400 border-green-500/30 hover:bg-green-500/30'
-                                    : 'bg-gray-800/50 text-gray-400 border-gray-700 hover:bg-gray-700/30'
-                                }`}
-                                onClick={() => setExercisesLevel(level.value)}
-                              >
-                                {level.label}
-                              </Button>
-                            ))}
-                          </div>
-                        </div>
-                      </CardContent>
-                    )}
-                  </Card>
+                {/* Exercise Generation Section */}
+<Card className="bg-gray-800/70 border border-green-500/30 shadow-md shadow-green-500/10">
+  <CardHeader className="p-4">
+    <div className="flex items-center space-x-3">
+      <Switch
+        id="generateExercises"
+        checked={generateExercises}
+        onCheckedChange={setGenerateExercises}
+        className="data-[state=checked]:bg-green-500 data-[state=checked]:border-green-400"
+      />
+      <Label htmlFor="generateExercises" className="text-green-400 font-medium">
+        Generate Practice Exercises <span className="text-xs text-gray-400">(with solutions)</span>
+      </Label>
+    </div>
+  </CardHeader>
+  
+  {generateExercises && (
+    <CardContent className="pt-0 space-y-4 pl-12">
+      <div className="space-y-2">
+        <Label htmlFor="exercisesCount" className="text-sm text-gray-300">
+          Number of Exercises (1-10)
+        </Label>
+        <Input
+          type="number"
+          id="exercisesCount"
+          min="1"
+          max="10"
+          value={exercisesCount}
+          onChange={(e) => setExercisesCount(parseInt(e.target.value))}
+          className="bg-gray-700 border-gray-600 focus:border-green-500 focus:ring-green-500/30"
+        />
+      </div>
+      
+      <div className="space-y-2">
+        <Label className="text-sm text-gray-300">Difficulty Level</Label>
+        <div className="flex gap-2 flex-wrap">
+          {difficultyLevels.map((level) => (
+            <Button
+              key={level.value}
+              type="button"
+              variant={exercisesLevel === level.value ? 'secondary' : 'ghost'}
+              size="sm"
+              className={`px-3 rounded-full ${
+                exercisesLevel === level.value 
+                  ? 'bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30 font-medium'
+                  : 'bg-gray-800 text-gray-400 border border-gray-700 hover:bg-gray-700'
+              }`}
+              onClick={() => setExercisesLevel(level.value)}
+            >
+              {level.label}
+            </Button>
+          ))}
+        </div>
+      </div>
+    </CardContent>
+  )}
+</Card>
 
                   <Button
                     type="submit"
@@ -392,7 +412,8 @@ export default function CodeDebugger() {
                   <CardDescription>AI analysis and solution</CardDescription>
                 </div>
                 {isDebugResponse(result) && (
-                  <Button 
+                  <div className='flex items-center space-x-2'>
+                    <Button 
                     variant="outline" 
                     size="sm"
                     className="bg-green-500/20 text-green-400 border-green-500/30 hover:bg-green-500/30"
@@ -411,6 +432,30 @@ export default function CodeDebugger() {
                       </>
                     )}
                   </Button>
+                  {
+                    result.exercises && result.exercises.length > 0 && (
+                      <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="bg-green-500/20 text-green-400 border-green-500/30 hover:bg-green-500/30"
+                      onClick={hadleExercisesSave}
+                      disabled={isSaving}
+                    >
+                      {isSaving ? (
+                        <>
+                          <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          {/* <Icons.save className="mr-2 h-4 w-4" /> */}
+                          Save exercices
+                        </>
+                      )}
+                    </Button>
+                    )
+                  }
+                  </div>
                 )}
               </div>
             </CardHeader>
@@ -528,14 +573,7 @@ export default function CodeDebugger() {
                                   <p className="text-sm">{exercise.description}</p>
                                 </div>
                                 
-                                <div>
-                                  <h4 className="text-sm font-medium mb-2">Code</h4>
-                                  <CodeBlock 
-                                    code={exercise.code} 
-                                    language={language} 
-                                    className="max-h-[500px] w-full"
-                                  />
-                                </div>
+                                
                                 
                                 {expandedExercises.includes(index) && exercise.solution && (
                                   <div className="mt-4">

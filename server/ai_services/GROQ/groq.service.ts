@@ -39,56 +39,54 @@ export async function generateExercice(request: DebugRequest): Promise<string> {
     const { language, generateExercisesCount, generateExercisesLevel, error, code } = request;
     
     const prompt = `
-      You are a master software engineer with decades of experience in teaching and mentoring junior developers.
-      
-      I need you to create ${generateExercisesCount} high-quality ${generateExercisesLevel} level coding exercises in ${language} that will help developers learn to avoid and fix the specific error pattern seen in this code.
-      
-      CODE WITH ERROR:
-      \`\`\`${language}
-      ${code}
-      \`\`\`
-      
-      ERROR MESSAGE:
-      ${error || "No explicit error message provided, but the code contains logical or syntax issues."}
-      
-      INSTRUCTIONS:
-      1. Carefully analyze the error pattern in the code
-      2. Design exercises that target the same concept but in different contexts
-      3. Ensure each exercise has clear learning objectives
-      4. Make exercises progressively more challenging
-      5. Include detailed comments in solutions explaining the key concepts
-      6. Focus on real-world practical scenarios that developers encounter
-      
-      DEVELOPER LEVEL: ${generateExercisesLevel};
-      
-      For ${generateExercisesLevel} level developers, focus on:
-      ${generateExercisesLevel === 'beginner' ? 
-        '- Basic syntax and common pitfalls\n- Clear, guided exercises\n- Fundamental concepts with detailed explanations\n- Simple, focused problems with one main learning objective per exercise' : 
-        generateExercisesLevel === 'intermediate' ? 
-        '- More complex logic and edge cases\n- Combined concepts that work together\n- Best practices and code efficiency\n- Realistic scenarios with moderate complexity' : 
-        '- Advanced patterns and optimizations\n- Debugging complex interactions\n- Performance considerations\n- Architecture and design decisions'}
-      
-      RESPOND USING EXACTLY THIS FORMAT:
-      
-      ### Exercises:
-      
-      #### Exercise 1:
-      Description: [Concise problem statement with clear objectives]
-      
-      Solution:
-      \`\`\`${language}
-      [Well-commented, optimal solution code]
-      \`\`\`
-      
-      #### Exercise 2:
-      Description: [Concise problem statement with clear objectives]
-      
-      Solution:
-      \`\`\`${language}
-      [Well-commented, optimal solution code]
-      \`\`\`
-      
-      [Continue with remaining exercises as requested]
+    You are a master software engineer with decades of experience in teaching mentoring junior developers.
+    
+    I need you to create ${generateExercisesCount} targeted ${generateExercisesLevel} level coding exercises in ${language} that help developers learn to avoid and fix the specific error pattern in this code.
+    
+    CODE WITH ERROR:
+    \`\`\`${language}
+    ${code}
+    \`\`\`
+    
+    ERROR MESSAGE:
+    ${error || "No explicit error message provided, but the code contains logical or syntax issues."}
+    
+    EXERCISE REQUIREMENTS:
+    - Each exercise must be focused on preventing the same type of error as seen in the code above
+    - Exercises should be practical, real-world scenarios a developer would encounter
+    - Create progressively challenging exercises that build on the core concept
+    - Solutions MUST include detailed comments explaining the concepts and why they work
+    
+    DEVELOPER LEVEL: ${generateExercisesLevel}
+    ${generateExercisesLevel === 'beginner' 
+      ? '- Focus on basic syntax and common pitfalls\n- Provide clear, guided exercises\n- Emphasize fundamental concepts with detailed explanations\n- Create simple, focused problems with one main learning objective'
+      : generateExercisesLevel === 'intermediate'
+      ? '- Include complex logic and edge cases\n- Combine related concepts that work together\n- Emphasize best practices and code efficiency\n- Create realistic scenarios with moderate complexity'
+      : '- Cover advanced patterns and optimizations\n- Include complex interactions and debugging\n- Address performance considerations\n- Explore architecture and design decisions'}
+    
+    YOU MUST FOLLOW THIS EXACT FORMAT FOR EACH EXERCISE:
+    
+    ### Exercises:
+    
+    #### Exercise 1:
+    Description: [Brief practical problem statement related to the error pattern]
+    
+    Solution:
+    \`\`\`${language}
+    [Well-commented, optimal solution code]
+    \`\`\`
+    
+    #### Exercise 2:
+    Description: [Brief practical problem statement related to the error pattern]
+    
+    Solution:
+    \`\`\`${language}
+    [Well-commented, optimal solution code]
+    \`\`\`
+    
+    [Continue with remaining exercises as requested]
+    
+    IMPORTANT: Each exercise MUST have both a description AND a solution with detailed comments.
     `;
   
     const response = await groq.chat.completions.create({

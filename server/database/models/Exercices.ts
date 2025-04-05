@@ -3,23 +3,18 @@ import mongoose, { Document, Schema, Types } from 'mongoose';
 // Define interface for the Solution subdocument
 interface ISolution extends Document {
   code: string;
-  explanation?: string;
 }
 
 // Define interface for each Exercise item
 interface IExerciseItem extends Document {
   description: string;
-  starterCode?: string;
-  hint?: string;
   solution: ISolution;
   difficulty?: 'easy' | 'medium' | 'hard';
   language?: string;
-  tags?: string[];
 }
 
 // Define main Exercise document interface
 interface IExercise extends Document {
-  submissionId: Types.ObjectId;
   userId: Types.ObjectId;
   exercises: IExerciseItem[];
   createdAt: Date;
@@ -32,10 +27,6 @@ const SolutionSchema = new Schema<ISolution>({
     type: String, 
     required: [true, 'Solution code is required'],
     trim: true
-  },
-  explanation: { 
-    type: String, 
-    trim: true 
   }
 });
 
@@ -63,11 +54,6 @@ const ExerciseItemSchema = new Schema<IExerciseItem>({
 
 // Main Exercise schema
 const ExerciseSchema = new Schema<IExercise>({
-  submissionId: { 
-    type: Schema.Types.ObjectId, 
-    ref: 'Submission',
-    required: true 
-  },
   userId: { 
     type: Schema.Types.ObjectId, 
     ref: 'User',

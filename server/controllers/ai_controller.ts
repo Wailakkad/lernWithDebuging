@@ -11,7 +11,7 @@ export async function debugCode(req: Request, res: Response) {
       language: req.body.language || 'javascript',
       // Add these new fields from the frontend request
       generateExercises: req.body.generateExercises || false,
-      generateExercisesCount: req.body.generateExercisesCount || 0,
+      generateExercisesCount: req.body.generateExercisesCount || 3,
       generateExercisesLevel: req.body.generateExercisesLevel || 'beginner'
     };      
     
