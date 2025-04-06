@@ -5,6 +5,8 @@ import axios, { AxiosError } from 'axios';
 import { CodeBlock } from '@/components/ui/code-block';
 import { toast } from 'sonner'; 
 import { SaveSubmissions } from '@/utils/SaveRequest';
+import { SaveExercises } from '@/utils/SaveExercices';
+import { SaveExerciseParams } from '@/utils/SaveExercices';
 
 import {
   Tabs,
@@ -187,17 +189,28 @@ export default function CodeDebugger() {
       setIsSaving(false);
     }
   };
-
+ 
 
   const hadleExercisesSave = async () => {
-    if (!isDebugResponse(result) || !result.exercises || result.exercises.length === 0) {
+    if (!isDebugResponse(result) || !result.exercises?.length) {
       toast.error('No exercises to save');
       return;
     }
   
     setIsSaving(true);
     try {
-      // Add logic to save exercises here
+      const exercisesToSave: SaveExerciseParams = {
+        exercises: result.exercises.map((exercise) => ({
+          description: exercise.description || 'Exercise description here',
+          solution: {
+            code: exercise.solution || '',
+          },
+          difficulty: 'medium',
+          language: 'javascript',
+        })),
+      };
+  
+      await SaveExercises(exercisesToSave);
       toast.success('Exercises saved successfully!');
     } catch (err) {
       console.error('Error saving exercises:', err);

@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import SubmissionModel from "../database/models/Submission";
 import Exercise from "../database/models/Exercices";
-
+import UserModel from "../database/models/User";
 interface AuthRequest extends Request {
   user?: {
     id: string; // This will hold the userId from the middleware
@@ -86,4 +86,79 @@ export const saveExercices = async (req : AuthRequest, res: Response): Promise<v
     console.error("Error saving exercices:", err);
     res.status(500).json({ message: "Internal server error." });
   }
+}
+
+
+
+export const getSubmissions = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id; // Get userId from the middleware
+
+    if (!userId) {
+      res.status(400).json({ message: "Missing user ID." });
+      return;
+    }
+
+    // Fetch submissions for the user
+    const submissions = await SubmissionModel.find({ userId }).sort({ createdAt: -1 });
+
+    res.status(200).json({
+      message: "Submissions fetched successfully.",
+      submissions,
+    });
+  } catch (error) {
+    console.error("Error fetching submissions:", error);
+    res.status(500).json({ message: "Internal server error." });
+  }
+}
+
+
+
+export const getExercises = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id; // Get userId from the middleware
+
+    if (!userId) {
+      res.status(400).json({ message: "Missing user ID." });
+      return;
+    }
+
+    // Fetch exercises for the user
+    const exercises = await Exercise.find({ userId }).sort({ createdAt: -1 });
+
+    res.status(200).json({
+      message: "Exercises fetched successfully.",
+      exercises,
+    });
+  } catch (error) {
+    console.error("Error fetching exercises:", error);
+    res.status(500).json({ message: "Internal server error." });
+  }
+}
+
+
+
+
+export const getUser = async (req : AuthRequest , res : Response)  : Promise<void> =>{
+  try{
+    const userId = req.user?.id; // Get userId from the middleware
+      
+      if (!userId) {
+        res.status(400).json({ message: "Missing user ID." });
+        return;
+      }
+  
+      // Fetch user details for the user
+      const user = await UserModel.findById(userId).sort({ createdAt: -1 });
+  
+      res.status(200).json({
+        message: "User fetched successfully.",
+        user,
+      });
+
+  }catch(err){
+    console.error("Error fetching user:", err);
+    res.status(500).json({ message: "Internal server error." });
+  }
+
 }
