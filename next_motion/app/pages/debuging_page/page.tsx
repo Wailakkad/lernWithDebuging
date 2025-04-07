@@ -29,6 +29,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Icons } from '@/components/icons';
+import Link from 'next/link';
 
 
 interface DebugRequest {
@@ -240,10 +241,12 @@ export default function CodeDebugger() {
               <Icons.help className="h-4 w-4 mr-2" />
               Help
             </Button>
-            <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
-              <Icons.settings className="h-4 w-4 mr-2" />
-              Settings
+         <Link href="/pages/profile">
+         <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
+            <Icons.dashboard className="h-5 w-5 mr-2" />
+              Dashbord
             </Button>
+         </Link>
           </div>
         </div>
       </header>
