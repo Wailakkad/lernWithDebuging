@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import Link from "next/link";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 interface LoginUserRequest {
   email: string;
@@ -23,6 +24,7 @@ export default function WavyBackgroundDemo() {
   });
 
   const router = useRouter();
+  const {login}  = useAuth();
 
   const api = axios.create({
     baseURL: "http://localhost:3001/api",
@@ -59,16 +61,18 @@ export default function WavyBackgroundDemo() {
       );
       if(response.status === 200){
         toast.success("Login successful!");
+        login();
         setTimeout(() => {
           router.push("/pages/debuging_page");
-        }, 2000); // Redirect after 2 seconds
+        }, 1000); // Redirect after 2 seconds
       }else if(response.status === 401){
         toast.error("Invalid email or password");
       }
 
 
     }catch(err){
-
+      console.error(err);
+      toast.error("server side is in trouble , try in another time !!!")
     }
   }
   
@@ -79,13 +83,6 @@ export default function WavyBackgroundDemo() {
   return (
     <WavyBackground className="max-w-4xl mx-auto pb-10">
       <div className="flex flex-col items-center">
-        <p className="text-2xl md:text-4xl lg:text-6xl text-white font-bold inter-var text-center mb-2">
-          LearnWith Debugging
-        </p>
-        <p className="text-base md:text-xl text-white/80 font-normal inter-var text-center mb-8">
-          Master the art of debugging with real-time analysis
-        </p>
-        
         <Card className="w-full max-w-[500px] bg-white text-black shadow-lg rounded-xl border-0">
           <CardHeader className="pb-4">
             <CardTitle className="text-3xl font-bold text-center text-black">Welcome Back, Developer</CardTitle>

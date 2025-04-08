@@ -1,6 +1,5 @@
 // app/dashboard/page.tsx
 "use client";
-
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
@@ -10,6 +9,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from '@/context/AuthContext';
+import { useProtectedRoute } from '@/hooks/useProtectRoute';
 import {
   Dialog,
   DialogContent,
@@ -117,8 +118,8 @@ interface Exercise {
 const API_BASE_URL = 'http://localhost:3001/api/actions';
 
 export default function DeveloperDashboard() {
-  const router = useRouter();
-  
+  useProtectedRoute();
+  const {logout} = useAuth();
   const [user, setUser] = useState<UserProfile | null>(null);
   const [debuggingSolutions, setDebuggingSolutions] = useState<DebuggingSolution[]>([]);
   const [exercises, setExercises] = useState<Exercise[]>([]);
@@ -317,7 +318,7 @@ export default function DeveloperDashboard() {
   return (
     <div className="flex h-screen" style={styles.darkBg}>
       {/* Sidebar */}
-      <aside className="w-64 flex flex-col border-r" style={{ backgroundColor: '#0a2e23', borderColor: '#52b788' }}>
+      <aside className="w-64 flex flex-col border-r" style={{ backgroundColor: 'black', borderColor: '#52b788' }}>
         <div className="p-4 flex items-center space-x-2 border-b" style={{ borderColor: '#52b788' }}>
           <Code2 className="h-6 w-6" style={styles.accent} />
           <h1 className="text-lg font-semibold" style={styles.accent}>DevDebugger</h1>
@@ -350,13 +351,15 @@ export default function DeveloperDashboard() {
         
         <div className="p-4 border-t" style={{ borderColor: '#52b788' }}>
           {[
-            { icon: Settings, label: "Settings" },
-            { icon: LogOut, label: "Logout" }
+            { icon: Settings, label: "Settings" , action : undefined },
+            { icon: LogOut, label: "Logout" , action :()=> logout() }
           ].map((item, idx) => (
             <Button 
               key={idx}
+              
               variant="ghost" 
               className="w-full justify-start hover:bg-opacity-20"
+              onClick={item.action}
               style={styles.text}
             >
               <item.icon className="h-5 w-5 mr-3" style={styles.subtext} />
@@ -369,7 +372,7 @@ export default function DeveloperDashboard() {
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto" style={styles.darkBg}>
         {/* Top header with user info */}
-        <div className="p-6 border-b flex items-center justify-between sticky top-0 z-10" style={{ backgroundColor: '#0a2e23', borderColor: '#52b788' }}>
+        <div className="p-6 border-b flex items-center justify-between sticky top-0 z-10" style={{ backgroundColor: 'black', borderColor: '#52b788' }}>
           <div className="flex items-center space-x-4">
             <Avatar className="h-12 w-12 border-2" style={{ borderColor: '#ccff33' }}>
               <AvatarImage src={user.avatarUrl} alt={user.name} />

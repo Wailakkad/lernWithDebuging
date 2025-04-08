@@ -7,6 +7,8 @@ import { toast } from 'sonner';
 import { SaveSubmissions } from '@/utils/SaveRequest';
 import { SaveExercises } from '@/utils/SaveExercices';
 import { SaveExerciseParams } from '@/utils/SaveExercices';
+import { useAuth } from '@/context/AuthContext';
+import { useProtectedRoute } from '@/hooks/useProtectRoute'; 
 
 import {
   Tabs,
@@ -80,12 +82,14 @@ const difficultyLevels = [
 ] as const;
 
 export default function CodeDebugger() {
+  useProtectedRoute();
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [language, setLanguage] = useState('javascript');
   const [result, setResult] = useState<DebugResponse | DebugError | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  
   
   // Exercise generation state
   const [generateExercises, setGenerateExercises] = useState(false);
@@ -230,6 +234,7 @@ export default function CodeDebugger() {
       <header className="border-b border-gray-800 py-4 bg-gray-900/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 flex justify-between items-center">
           <div className="flex items-center space-x-3">
+
             <Icons.logo/>
             <div>
               <h1 className="text-xl font-bold text-green-400">Code Debugger AI</h1>

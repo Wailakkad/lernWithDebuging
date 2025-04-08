@@ -108,14 +108,9 @@ export default function RegisterPage() {
 };
 
   return (
-    <WavyBackground className="max-w-4xl mx-auto pb-10 ">
-      <div className="flex flex-col items-center">
-        <p className="text-2xl md:text-4xl lg:text-6xl text-white font-bold inter-var text-center mb-2">
-          LearnWith Debugging
-        </p>
-        <p className="text-base md:text-xl text-white/80 font-normal inter-var text-center mb-8">
-          Join our community of developers mastering debugging
-        </p>
+    <WavyBackground className="max-w-4xl mx-auto">
+      <div className="flex flex-col items-center ">
+       
         
         <Card className="w-full max-w-3xl bg-white text-black shadow-lg rounded-xl border-0">
           <CardHeader className="pb-4">
