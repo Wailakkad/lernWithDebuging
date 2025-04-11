@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from '@/context/AuthContext';
 import { useProtectedRoute } from '@/hooks/useProtectRoute';
@@ -230,6 +231,27 @@ export default function DeveloperDashboard() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error loading exercises');
       console.error(err);
+    }
+  };
+  const handleDeleteExercise = async (exerciseId: string) => {
+    try {
+      // Make a DELETE request to the backend API
+      const response = await axios.delete(`${API_BASE_URL}/deleteExercise/${exerciseId}`, {
+        withCredentials: true, // Include credentials for authentication
+      });
+  
+      if (response.status === 200) {
+        // Remove the deleted exercise from the state
+        setExercises((prevExercises) =>
+          prevExercises.filter((exercise) => exercise.id !== exerciseId)
+        );
+        toast.success('Exercise deleted successfully');
+      } else {
+        toast.error('Failed to delete exercise:', response.data.message);
+      }
+    } catch (err) {
+      console.error('Error deleting exercise:', err);
+      
     }
   };
   
@@ -747,7 +769,7 @@ export default function DeveloperDashboard() {
                           >
                             View Exercise
                           </Button>
-                          <button  className='bg-red-500 text-white font-bold px-4 py-2 rounded-2xl'>
+                          <button onClick={()=> handleDeleteExercise(exercise.id)}  className='bg-red-500 text-white font-bold px-4 py-2 rounded-2xl'>
                             Delete
                           </button>
                         </div>
