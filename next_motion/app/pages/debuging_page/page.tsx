@@ -41,6 +41,7 @@ interface DebugRequest {
   generateExercises: boolean;
   generateExercisesCount: number;
   generateExercisesLevel: 'beginner' | 'intermediate' | 'advanced';
+  generateCourse?:boolean;
 }
 
 interface DebugExercise {
@@ -95,6 +96,9 @@ export default function CodeDebugger() {
   const [generateExercises, setGenerateExercises] = useState(false);
   const [exercisesCount, setExercisesCount] = useState(3);
   const [exercisesLevel, setExercisesLevel] = useState<'beginner' | 'intermediate' | 'advanced'>('beginner');
+  const [generateCourse, setGenerateCourse] = useState(false);
+
+
   
   // Expanded exercises state
   const [expandedExercises, setExpandedExercises] = useState<number[]>([]);
@@ -127,12 +131,14 @@ export default function CodeDebugger() {
       generateExercises,
       generateExercisesCount: generateExercises ? exercisesCount : 0,
       generateExercisesLevel: exercisesLevel,
+      generateCourse
+
     };
 
     try {
       const response = await axios.post<DebugResponse>('http://localhost:3001/api/debug', requestData);
       setResult(response.data);
-      console.log('Debugging result:', response.data);
+      console.log('Debugging result:', response.data.exercises);
       
       toast.success('Code analyzed successfully'); // Updated toast
     } catch (err) {
@@ -228,6 +234,7 @@ export default function CodeDebugger() {
   const isDebugResponse = (result: DebugResponse | DebugError | null): result is DebugResponse => {
     return result !== null && 'correctedCode' in result;
   };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 to-gray-900 text-gray-100">
@@ -374,7 +381,26 @@ export default function CodeDebugger() {
       </div>
     </CardContent>
   )}
+
+
+    
 </Card>
+<Card className="bg-gray-800/70 border border-green-500/30 shadow-md shadow-green-500/10 mt-4">
+  <CardHeader className="p-4">
+    <div className="flex items-center space-x-3">
+      <Switch
+        id="generateCourse"
+        checked={generateCourse}
+        onCheckedChange={setGenerateCourse}
+        className="data-[state=checked]:bg-green-500 data-[state=checked]:border-green-400"
+      />
+      <Label htmlFor="generateCourse" className="text-green-400 font-medium">
+        Generate Course <span className="text-xs text-gray-400">(with examples)</span>
+      </Label>
+    </div>
+  </CardHeader>
+</Card>
+ 
 
                   <Button
                     type="submit"

@@ -11,6 +11,7 @@ interface IExerciseItem extends Document {
   solution: ISolution;
   difficulty?: 'easy' | 'medium' | 'hard';
   language?: string;
+  status?: 'pending' | 'completed'
 }
 
 // Define main Exercise document interface
@@ -49,6 +50,11 @@ const ExerciseItemSchema = new Schema<IExerciseItem>({
   language: {
     type: String,
     trim: true
+  },
+  status : {
+    type: String,
+    enum: ['pending', 'completed'],
+    default: 'pending'
   }
 });
 

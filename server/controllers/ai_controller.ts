@@ -12,10 +12,12 @@ export async function debugCode(req: Request, res: Response) {
       // Add these new fields from the frontend request
       generateExercises: req.body.generateExercises || false,
       generateExercisesCount: req.body.generateExercisesCount || 3,
-      generateExercisesLevel: req.body.generateExercisesLevel || 'beginner'
+      generateExercisesLevel: req.body.generateExercisesLevel || 'beginner',
+      generateCourse: req.body.generateCourse || false
     };      
     
-    const result = await handleDebugRequest(request);     
+    const result = await handleDebugRequest(request);  
+    console.log("result : " , result)   
     res.json(result);   
   } catch (error : any) {     
     res.status(500).json({       

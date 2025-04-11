@@ -5,6 +5,7 @@ export interface DebugRequest {
     generateExercises?: boolean;
     generateExercisesCount?: number;
     generateExercisesLevel?: 'beginner' | 'intermediate' | 'advanced';
+    generateCourse?: boolean;
   }
   
   export interface DebugResponse {
@@ -14,7 +15,12 @@ export interface DebugRequest {
       errorAnalysis: string;
       fixExplanation: string;
     };
-    exercises?: Exercise[]; // Optional field for exercises
+    exercises?: Exercise[];
+    course?: Array<{
+      id: number;
+      title: string;
+      content: string;
+    }>; 
   }
 
   export interface Exercise {

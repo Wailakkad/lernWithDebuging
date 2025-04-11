@@ -194,6 +194,7 @@ export default function DeveloperDashboard() {
             description: string;
             difficulty: string;
             language: string;
+            status : string
             _id: string;
             solution?: {
               code: string;
@@ -216,7 +217,7 @@ export default function DeveloperDashboard() {
             language: ex.language,
             title: ex.description.substring(0, 50) + (ex.description.length > 50 ? '...' : ''),
             difficulty: ex.difficulty,
-            status: Math.random() > 0.5 ? "Completed" : "In Progress", // Randomize for demo
+            status: ex.status, // Randomize for demo
             date: format(new Date(request.createdAt), 'MMM dd, yyyy'),
             description: ex.description,
             fullDescription: ex.description, // Added this field
@@ -618,6 +619,10 @@ export default function DeveloperDashboard() {
                         <Button variant="outline" size="sm" style={styles.button}>
                           View Details
                         </Button>
+                        <Button variant="outline" size="sm" style={styles.button}>
+                          Delete
+                        </Button>
+                        
                       </div>
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
@@ -742,6 +747,9 @@ export default function DeveloperDashboard() {
                           >
                             View Exercise
                           </Button>
+                          <button  className='bg-red-500 text-white font-bold px-4 py-2 rounded-2xl'>
+                            Delete
+                          </button>
                         </div>
                       </div>
                     ))

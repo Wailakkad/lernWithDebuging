@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import SubmissionModel from "../database/models/Submission";
 import Exercise from "../database/models/Exercices";
 import UserModel from "../database/models/User";
+import mongoose from 'mongoose';
 interface AuthRequest extends Request {
   user?: {
     id: string; // This will hold the userId from the middleware
@@ -162,3 +163,50 @@ export const getUser = async (req : AuthRequest , res : Response)  : Promise<voi
   }
 
 }
+
+
+
+
+
+export const deleteExercise = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { exerciseId } = req.params;
+    const userId = req.user?.id; // Get userId from the middleware
+
+    if (!userId) {
+      res.status(400).json({ message: "Missing user ID." });
+      return;
+    }
+
+    if (!exerciseId) {
+      res.status(400).json({ message: "Missing exercise ID." });
+      return;
+    }
+
+    // Convert exerciseId to ObjectId if necessary
+    const objectIdExerciseId = new mongoose.Types.ObjectId(exerciseId);
+
+    // Use $pull to remove the exercise from the exercises array
+    const response = await Exercise.updateOne(
+      { userId, "exercises._id": objectIdExerciseId }, // Match the document by userId and exerciseId
+      { $pull: { exercises: { _id: objectIdExerciseId } } } // Remove the exercise with the specified _id
+    );
+
+    console.log("Update response:", response);
+
+    if (response.matchedCount === 0) {
+      res.status(404).json({ message: "Exercise not found." });
+      return;
+    }
+
+    if (response.modifiedCount === 0) {
+      res.status(404).json({ message: "Exercise not found or already deleted." });
+      return;
+    }
+
+    res.status(200).json({ message: "Exercise deleted successfully." });
+  } catch (err) {
+    console.error("Error deleting exercise:", err);
+    res.status(500).json({ message: "Internal server error." });
+  }
+};

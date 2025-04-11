@@ -1,10 +1,9 @@
 "use client"
-
-import { useEffect, useRef } from "react"
 import Link from "next/link"
 import { LayoutGroup, motion } from "framer-motion"
 import { TextRotate } from "@/components/ui/text-rotate"
 import Floating, { FloatingElement } from "@/components/ui/parallax-floating"
+import { useAuth } from "@/context/AuthContext"
 
 const exampleImages = [
   {
@@ -57,6 +56,7 @@ const exampleImages = [
 ]
 
 function LandingHero() {
+  const {isAuthenticated} = useAuth();
   return (
     <section className="w-full h-screen overflow-hidden md:overflow-visible flex flex-col items-center justify-center relative">
       <Floating sensitivity={-0.5} className="h-full">
@@ -196,10 +196,17 @@ function LandingHero() {
               scale: 1.05,
               transition: { type: "spring", damping: 30, stiffness: 400 },
             }}
+            onClick={()=>{
+              if(isAuthenticated){
+                window.location.href = "/pages/debuging_page"
+              }else{
+                window.location.href = "/pages/authPages/RegisterPage"
+              }
+            }}
           >
-            <Link href="/pages/authPages/RegisterPage">
+            
               Try it free <span className="font-serif ml-1">→</span>
-            </Link>
+            
           </motion.button>
           <motion.button
             className="sm:text-base md:text-lg lg:text-xl font-semibold tracking-tight text-white bg-[#168aad] px-4 py-2 sm:px-5 sm:py-2.5 md:px-6 md:py-3 lg:px-8 lg:py-3 rounded-full z-20 shadow-2xl font-calendas"
