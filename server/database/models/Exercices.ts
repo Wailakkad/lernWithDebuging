@@ -53,8 +53,8 @@ const ExerciseItemSchema = new Schema<IExerciseItem>({
   },
   status : {
     type: String,
-    enum: ['pending', 'completed'],
-    default: 'pending'
+    enum: ['in progress', 'completed'],
+    default: 'in progress'
   }
 });
 

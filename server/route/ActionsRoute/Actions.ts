@@ -1,7 +1,7 @@
 import exprees from 'express';
 
 const router = exprees.Router();
-import {saveSubmission , saveExercices , getSubmissions , getUser , getExercises , deleteExercise} from '../../controllers/Actions';
+import {saveSubmission , saveExercices , getSubmissions , getUser , getExercises , deleteExercise , MarkStatusExercice , deleteSubmission} from '../../controllers/Actions';
 import { authVerify } from '../../utils/authVerify';
 
 
@@ -11,6 +11,8 @@ router.get('/getSubmissions', authVerify , getSubmissions);
 router.get('/getUser', authVerify , getUser);
 router.get('/getExercises', authVerify , getExercises);
 router.delete('/deleteExercise/:exerciseId', authVerify , deleteExercise);
+router.post('/MarkStatusExercice/:exerciseId', authVerify , MarkStatusExercice);
+router.delete('/deleteSubmission/:submissionId', authVerify , deleteSubmission);
 
 
 

@@ -3,6 +3,8 @@
 import { useState, useCallback } from 'react';
 import axios, { AxiosError } from 'axios';
 import { CodeBlock } from '@/components/ui/code-block';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { toast } from 'sonner'; 
 import { SaveSubmissions } from '@/utils/SaveRequest';
 import { SaveExercises } from '@/utils/SaveExercices';
@@ -24,6 +26,7 @@ import {
   CardContent,
   CardFooter,
 } from '@/components/ui/card';
+import  { Components } from 'react-markdown';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
@@ -32,6 +35,9 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Icons } from '@/components/icons';
 import Link from 'next/link';
+
+
+
 
 
 interface DebugRequest {
@@ -48,6 +54,10 @@ interface DebugExercise {
   description: string;
   solution?: string;
 }
+interface courses {
+  title: string;
+  content?: string;
+}
 
 interface DebugResponse {
   originalCode: string;
@@ -57,6 +67,7 @@ interface DebugResponse {
     fixExplanation: string;
   };
   exercises?: DebugExercise[];
+  course?: courses[];
 }
 
 interface DebugError {
@@ -139,7 +150,7 @@ export default function CodeDebugger() {
       const response = await axios.post<DebugResponse>('http://localhost:3001/api/debug', requestData);
       setResult(response.data);
       console.log('Debugging result:', response.data.exercises);
-      
+      console.log('Courses:', response.data.course);
       toast.success('Code analyzed successfully'); // Updated toast
     } catch (err) {
       const error = err as AxiosError<DebugError>;
@@ -539,6 +550,16 @@ export default function CodeDebugger() {
                           </Badge>
                         </TabsTrigger>
                       )}
+                      {result.course && result.course.length > 0 && (
+                        <TabsTrigger value="course" className="flex items-center">
+                                <Icons.book className="h-4 w-4 mr-2" />
+
+                          Course
+                          <Badge className="ml-2 bg-green-500/30 text-green-400">
+                            {result.course.length}
+                          </Badge>
+                        </TabsTrigger>
+                      )}
                     </TabsList>
                     
                     <div className="h-full overflow-y-auto pt-4">
@@ -666,6 +687,71 @@ export default function CodeDebugger() {
                           ))}
                         </TabsContent>
                       )}
+  {result.course && result.course.length > 0 && (
+  <TabsContent value="course" className="space-y-4">
+    {result.course.map((courseItem, index) => (
+      <Card key={index} className="border-gray-700 bg-gray-800/50">
+        <CardHeader className="pb-3 border-b border-gray-700">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg font-medium text-green-400">
+              {courseItem.title || 'Untitled Module'}
+            </CardTitle>
+            <Badge 
+              variant="outline"
+              className="bg-blue-500/20 text-blue-400 border-blue-500/30"
+            >
+              Learning Module {index + 1}
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-4">
+  {courseItem.content ? (
+    <div className="prose prose-invert max-w-none markdown-content">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          code: ({ node, inline, className, children, ...props }: any) => {
+            const match = /language-(\w+)/.exec(className || '');
+            return !inline ? (
+              <CodeBlock
+                code={String(children).replace(/\n$/, '')}
+                language={match ? match[1] : 'typescript'}
+                className="my-4"
+                {...props}
+              />
+            ) : (
+              <code className="bg-gray-800 px-1 py-0.5 rounded text-sm" {...props}>
+                {children}
+              </code>
+            );
+          },
+          p: ({ node, children }: any) => {
+            // Check if the paragraph contains a <pre> tag
+            if (node.children.some((child: any) => child.tagName === 'pre')) {
+              return <>{children}</>; // Avoid wrapping <pre> in <p>
+            }
+            return <p className="mb-4 text-gray-200">{children}</p>;
+          },
+          h1: ({ children }: any) => <h1 className="text-xl font-bold text-green-400 mt-6 mb-3">{children}</h1>,
+          h2: ({ children }: any) => <h2 className="text-lg font-bold text-green-300 mt-5 mb-2">{children}</h2>,
+          h3: ({ children }: any) => <h3 className="text-md font-bold text-blue-300 mt-4 mb-2">{children}</h3>,
+          ul: ({ children }: any) => <ul className="list-disc pl-6 mb-4 text-gray-200">{children}</ul>,
+          li: ({ children }: any) => <li className="mb-1">{children}</li>,
+          strong: ({ children }: any) => <strong className="font-bold text-green-300">{children}</strong>,
+        }}
+      >
+        {courseItem.content}
+      </ReactMarkdown>
+    </div>
+  ) : (
+    <p className="text-gray-400 italic">No content available for this module.</p>
+  )}
+</CardContent>
+      </Card>
+    ))}
+  </TabsContent>
+)}
+
                     </div>
                   </Tabs>
                 ) : (

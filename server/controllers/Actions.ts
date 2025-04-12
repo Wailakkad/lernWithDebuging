@@ -210,3 +210,78 @@ export const deleteExercise = async (req: AuthRequest, res: Response): Promise<v
     res.status(500).json({ message: "Internal server error." });
   }
 };
+
+
+export const MarkStatusExercice = async (req : AuthRequest , res : Response) : Promise<void> =>{
+  const {Newstatus} = req.body;
+  const {exerciseId} = req.params;
+  const userId = req.user?.id;
+  if(!userId){
+    res.status(400).json({message : "user Id not found"})
+    return;
+  }
+  if(!exerciseId){
+    res.status(400).json({message : "exercise Id not found"})
+    return;
+  }
+  if(!Newstatus){
+    res.status(400).json({message : "New Status from body is required"})
+    return;
+  }
+  try{
+    const objectIdExerciseId = new mongoose.Types.ObjectId(exerciseId);
+
+    const response = await Exercise.updateOne({userId : userId , "exercises._id" : objectIdExerciseId} , {$set : {"exercises.$.status" : Newstatus}});
+   
+    if (response.matchedCount === 0) {
+      res.status(404).json({ message: "Exercise not found" });
+      return;
+    }
+
+    if (response.modifiedCount === 0) {
+      res.status(400).json({ message: "Failed to update exercise status" });
+      return;
+    }
+
+    res.status(200).json({message : "status marked successfuly"})
+  }catch(err){
+    console.log("server error : " , err);
+    res.status(500).json({message : err})
+  }
+
+
+}
+
+export const deleteSubmission = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { submissionId } = req.params; // Corrected parameter name
+    const userId = req.user?.id; // Get userId from the middleware
+
+    if (!userId) {
+      res.status(400).json({ message: "Missing user ID." });
+      return;
+    }
+
+    if (!submissionId) {
+      res.status(400).json({ message: "Missing submission ID." });
+      return;
+    }
+
+    // Convert submissionId to ObjectId if necessary
+    const objectIdSubmissionId = new mongoose.Types.ObjectId(submissionId);
+
+    // Delete the submission document
+    const response = await SubmissionModel.deleteOne({ userId: userId, _id: objectIdSubmissionId });
+
+    if (response.deletedCount === 0) {
+      res.status(404).json({ message: "Submission not found." });
+      return;
+    }
+
+    res.status(200).json({ message: "Submission deleted successfully." });
+  } catch (err) {
+    console.error("Error deleting submission:", err);
+    res.status(500).json({ message: "Internal server error." });
+  }
+};
+

@@ -43,13 +43,16 @@ import {
   Code as CodeIcon, // Renamed to fix import issue
   Lightbulb
 } from 'lucide-react';
+
 import axios from 'axios';
+import { response } from 'express';
 
 // Types
 interface ApiUser {
   _id: string;
   username: string;
   email: string;
+  profileImage : string;
   developerType: string;
   experienceLevel: string;
   createdAt: string;
@@ -147,7 +150,7 @@ export default function DeveloperDashboard() {
         name: data.user.username,
         email: data.user.email,
         role: data.user.developerType,
-        avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(data.user.username)}&background=random&color=fff`,
+        avatarUrl:  data.user.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.user.username)}&background=random&color=fff`,
         joinDate: format(new Date(data.user.createdAt), 'MMMM yyyy'),
         debugCount: 0,
         exerciseCount: 0,
@@ -252,6 +255,59 @@ export default function DeveloperDashboard() {
     } catch (err) {
       console.error('Error deleting exercise:', err);
       
+    }
+  };
+  const HandleMarkedStatus = async (exerciseId: string) => {
+    try {
+      // Make a POST request to the backend API
+      const response = await axios.post(
+        `${API_BASE_URL}/MarkStatusExercice/${exerciseId}`,
+        { Newstatus: "complete" }, // Pass the new status in the request body
+        { withCredentials: true } // Include credentials for authentication
+      );
+  
+      if (response.status === 200) {
+        // Update the exercises state to reflect the new status
+        setExercises((prevExercises) =>
+          prevExercises.map((exercise) =>
+            exercise.id === exerciseId
+              ? { ...exercise, status: "complete" } // Update the status of the matched exercise
+              : exercise
+          )
+        );
+        toast.success("Exercise marked as complete!");
+      } else {
+        toast.error("Failed to mark exercise as complete.");
+      }
+    } catch (err) {
+      console.error("Error marking exercise as complete:", err);
+      toast.error("An error occurred while updating the status.");
+    }
+  };
+  const HandleDeleteSubmition = async (submitionId: string) => {
+    if (!submitionId) {
+      toast.error("The submission ID is required.");
+      return;
+    }
+  
+    try {
+      // Make a DELETE request to the backend API
+      const response = await axios.delete(`${API_BASE_URL}/deleteSubmission/${submitionId}`, {
+        withCredentials: true, // Include credentials for authentication
+      });
+  
+      if (response.status === 200) {
+        // Remove the deleted submission from the state
+        setDebuggingSolutions((prevSubmitions) =>
+          prevSubmitions.filter((submission) => submission._id !== submitionId)
+        );
+        toast.success("Submission deleted successfully.");
+      } else {
+        toast.error("Failed to delete submission.");
+      }
+    } catch (err) {
+      console.error("Error deleting submission:", err);
+      toast.error("An error occurred while deleting the submission.");
     }
   };
   
@@ -396,29 +452,56 @@ export default function DeveloperDashboard() {
       <main className="flex-1 overflow-y-auto" style={styles.darkBg}>
         {/* Top header with user info */}
         <div className="p-6 border-b flex items-center justify-between sticky top-0 z-10" style={{ backgroundColor: 'black', borderColor: '#52b788' }}>
-          <div className="flex items-center space-x-4">
-            <Avatar className="h-12 w-12 border-2" style={{ borderColor: '#ccff33' }}>
-              <AvatarImage src={user.avatarUrl} alt={user.name} />
-              <AvatarFallback style={{ backgroundColor: 'rgba(204, 255, 51, 0.2)', color: '#ccff33' }}>
-                {user.name.charAt(0)}
-              </AvatarFallback>
-            </Avatar>
-            
-            <div>
-              <h2 className="text-xl font-semibold" style={styles.text}>{user.name}</h2>
-              <div className="flex items-center space-x-2 text-sm" style={styles.subtext}>
-                <span>{user.role}</span>
-                <span>•</span>
-                <span>Member since {user.joinDate}</span>
-              </div>
-            </div>
-          </div>
+        <div className="flex items-center space-x-4">
+    <Avatar className="h-12 w-12 border-2" style={{ borderColor: '#ccff33' }}>
+      {user.avatarUrl ? (
+        <>
+          <AvatarImage 
+            src={user.avatarUrl} 
+            alt={user.name} 
+            onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+              const target = e.target as HTMLImageElement;
+              target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random&color=fff`;
+            }}
+          />
+          <AvatarFallback style={{ backgroundColor: 'rgba(204, 255, 51, 0.2)', color: '#ccff33' }}>
+            {user.name.charAt(0).toUpperCase()}
+          </AvatarFallback>
+        </>
+      ) : (
+        <div style={{
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: 'rgba(204, 255, 51, 0.2)',
+          color: '#ccff33',
+          fontSize: '1.5rem',
+          fontWeight: 'bold'
+        }}>
+          {user.name.charAt(0).toUpperCase()}
+        </div>
+      )}
+    </Avatar>
+    
+    <div>
+      <h2 className="text-xl font-semibold" style={styles.text}>{user.name}</h2>
+      <div className="flex items-center space-x-2 text-sm" style={styles.subtext}>
+        <span>{user.role}</span>
+        <span>•</span>
+        <span>Member since {user.joinDate}</span>
+      </div>
+    </div>
+  </div>
           
           <div className="flex space-x-2">
+            <Link href="/pages/editPage">
             <Button variant="outline" style={styles.button} className="hover:border-opacity-80">
               <User className="h-4 w-4 mr-2" />
               Edit Profile
             </Button>
+            </Link>
             
            <Link href="/pages/debuging_page">
            <Button  style={styles.accentButton} className="hover:bg-opacity-90">
@@ -527,39 +610,44 @@ export default function DeveloperDashboard() {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
-                      {debuggingSolutions.slice(0, 2).map((solution) => (
-                        <div key={solution._id} className="flex flex-col space-y-4 p-4 rounded-lg transition-colors" style={styles.darkBg}>
-                          <div className="flex items-center space-x-4">
-                            <div className="p-3 rounded-full" style={{ backgroundColor: 'rgba(204, 255, 51, 0.15)' }}>
-                              <FileCode className="h-6 w-6" style={styles.accent} />
-                            </div>
-                            <div className="flex-1">
-                              <div className="flex items-center justify-between">
-                                <h4 className="font-medium text-lg" style={styles.text}>{solution.errorType}</h4>
-                                <Badge style={{ backgroundColor: 'rgba(204, 255, 51, 0.15)', color: '#ccff33', borderColor: 'rgba(204, 255, 51, 0.3)' }}>
-                                  Fixed
-                                </Badge>
-                              </div>
-                              <div className="flex items-center space-x-2 text-sm mt-1" style={styles.subtext}>
-                                <span>{solution.language}</span>
-                                <span>•</span>
-                                <span>{new Date(solution.createdAt).toLocaleDateString()}</span>
-                              </div>
-                            </div>
-                            <Button variant="outline" size="sm" style={styles.button}>
-                              View Details
-                            </Button>
-                          </div>
-                          
-                          <div className="bg-opacity-50 p-4 rounded-lg" style={{ backgroundColor: '#0a2e23' }}>
-                            <h5 className="text-sm font-medium mb-2" style={styles.subtext}>Error Analysis</h5>
-                            <p className="text-sm mb-2" style={styles.text}>{solution.errorAnalysis.description}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
+  <div className="space-y-4">
+    {debuggingSolutions.length === 0 ? (
+      <div className="text-center py-8">
+        <FileCode className="h-12 w-12 mx-auto mb-4" style={{ color: '#52b788' }} />
+        <h4 className="text-lg font-medium" style={styles.text}>No debugging solutions saved</h4>
+        <p style={{ color: '#a7c6bc' }}>You haven't saved any debugging solutions yet. Start debugging to see them here!</p>
+      </div>
+    ) : (
+      debuggingSolutions.slice(0, 2).map((solution) => (
+        <div key={solution._id} className="flex flex-col space-y-4 p-4 rounded-lg transition-colors" style={styles.darkBg}>
+          <div className="flex items-center space-x-4">
+            <div className="p-3 rounded-full" style={{ backgroundColor: 'rgba(204, 255, 51, 0.15)' }}>
+              <FileCode className="h-6 w-6" style={styles.accent} />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium text-lg" style={styles.text}>{solution.errorType}</h4>
+              </div>
+              <div className="flex items-center space-x-2 text-sm mt-1" style={styles.subtext}>
+                <span>{solution.language}</span>
+                <span>•</span>
+                <span>{new Date(solution.createdAt).toLocaleDateString()}</span>
+              </div>
+            </div>
+            <Button variant="outline" size="sm" style={styles.button}>
+              View Details
+            </Button>
+          </div>
+
+          <div className="bg-opacity-50 p-4 rounded-lg" style={{ backgroundColor: '#0a2e23' }}>
+            <h5 className="text-sm font-medium mb-2" style={styles.subtext}>Error Analysis</h5>
+            <p className="text-sm mb-2" style={styles.text}>{solution.errorAnalysis.description}</p>
+          </div>
+        </div>
+      ))
+    )}
+  </div>
+</CardContent>
                 </Card>
                 
                 <Card style={styles.card}>
@@ -577,35 +665,43 @@ export default function DeveloperDashboard() {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
-                      {exercises.slice(0, 3).map((exercise) => (
-                        <div key={exercise.id} className="flex items-center space-x-4 p-3 rounded-lg" style={styles.darkBg}>
-                          <div className="p-2 rounded-full" style={{ backgroundColor: 'rgba(204, 255, 51, 0.15)' }}>
-                            <Dumbbell className="h-5 w-5" style={styles.accent} />
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between">
-                              <h4 className="font-medium" style={styles.text}>{exercise.title}</h4>
-                              <Badge style={{ 
-                                backgroundColor: exercise.status === "Completed" ? 'rgba(204, 255, 51, 0.15)' : 'rgba(82, 183, 136, 0.15)',
-                                color: exercise.status === "Completed" ? '#ccff33' : '#52b788',
-                                borderColor: exercise.status === "Completed" ? 'rgba(204, 255, 51, 0.3)' : 'rgba(82, 183, 136, 0.3)'
-                              }}>
-                                {exercise.status}
-                              </Badge>
-                            </div>
-                            <div className="flex items-center space-x-2 text-sm mt-1" style={styles.subtext}>
-                              <span>{exercise.language}</span>
-                              <span>•</span>
-                              <span>{exercise.difficulty}</span>
-                              <span>•</span>
-                              <span>{exercise.date}</span>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
+  <div className="space-y-4">
+    {exercises.length === 0 ? (
+      <div className="text-center py-8">
+        <Dumbbell className="h-12 w-12 mx-auto mb-4" style={{ color: '#52b788' }} />
+        <h4 className="text-lg font-medium" style={styles.text}>No exercises saved</h4>
+        <p style={{ color: '#a7c6bc' }}>You haven't saved any exercises yet. Start practicing to see them here!</p>
+      </div>
+    ) : (
+      exercises.slice(0, 3).map((exercise) => (
+        <div key={exercise.id} className="flex items-center space-x-4 p-3 rounded-lg" style={styles.darkBg}>
+          <div className="p-2 rounded-full" style={{ backgroundColor: 'rgba(204, 255, 51, 0.15)' }}>
+            <Dumbbell className="h-5 w-5" style={styles.accent} />
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center justify-between">
+              <h4 className="font-medium" style={styles.text}>{exercise.title}</h4>
+              <Badge style={{ 
+                backgroundColor: exercise.status === "Completed" ? 'rgba(204, 255, 51, 0.15)' : 'rgba(82, 183, 136, 0.15)',
+                color: exercise.status === "Completed" ? '#ccff33' : '#52b788',
+                borderColor: exercise.status === "Completed" ? 'rgba(204, 255, 51, 0.3)' : 'rgba(82, 183, 136, 0.3)'
+              }}>
+                {exercise.status}
+              </Badge>
+            </div>
+            <div className="flex items-center space-x-2 text-sm mt-1" style={styles.subtext}>
+              <span>{exercise.language}</span>
+              <span>•</span>
+              <span>{exercise.difficulty}</span>
+              <span>•</span>
+              <span>{exercise.date}</span>
+            </div>
+          </div>
+        </div>
+      ))
+    )}
+  </div>
+</CardContent>
                 </Card>
               </div>
             </div>
@@ -628,9 +724,7 @@ export default function DeveloperDashboard() {
                         <div className="flex-1">
                           <div className="flex items-center justify-between">
                             <h4 className="font-medium text-lg" style={styles.text}>{solution.errorType}</h4>
-                            <Badge style={{ backgroundColor: 'rgba(204, 255, 51, 0.15)', color: '#ccff33', borderColor: 'rgba(204, 255, 51, 0.3)' }}>
-                              Fixed
-                            </Badge>
+                            
                           </div>
                           <div className="flex items-center space-x-2 text-sm mt-1" style={styles.subtext}>
                             <span>{solution.language}</span>
@@ -641,7 +735,7 @@ export default function DeveloperDashboard() {
                         <Button variant="outline" size="sm" style={styles.button}>
                           View Details
                         </Button>
-                        <Button variant="outline" size="sm" style={styles.button}>
+                        <Button onClick={() => HandleDeleteSubmition(solution._id)} variant="outline" size="sm" style={styles.button}>
                           Delete
                         </Button>
                         
@@ -706,8 +800,8 @@ export default function DeveloperDashboard() {
                 <div className="flex space-x-2 mt-4 sm:mt-0">
                   {[
                     { id: "all", label: "All", icon: null },
-                    { id: "completed", label: "Completed", icon: CheckCircle2 },
-                    { id: "inprogress", label: "In Progress", icon: Clock }
+                    { id: "complete", label: "Completed", icon: CheckCircle2 },
+                    { id: "in progress", label: "In Progress", icon: Clock }
                   ].map(filter => (
                     <Button 
                       key={filter.id}
@@ -858,9 +952,7 @@ export default function DeveloperDashboard() {
           <TabsTrigger value="solution" className="flex-1" style={{ color: '#d8f3dc' }}>
             Solution
           </TabsTrigger>
-          <TabsTrigger value="hints" className="flex-1" style={{ color: '#d8f3dc' }}>
-            Hints
-          </TabsTrigger>
+          
         </TabsList>
 
         <TabsContent
@@ -875,30 +967,7 @@ export default function DeveloperDashboard() {
             <p style={styles.text}>{selectedExercise?.fullDescription}</p>
           </div>
 
-          <div className="mt-6">
-            <div className="flex justify-between items-center mb-2">
-              <h5 className="text-sm font-medium" style={styles.subtext}>
-                Start Coding
-              </h5>
-              <Button variant="ghost" size="sm" style={styles.button}>
-                <Copy className="h-4 w-4 mr-2" />
-                Copy Starter Code
-              </Button>
-            </div>
-            <div className="p-4 rounded-lg" style={{ backgroundColor: '#0a2e23' }}>
-              <pre className="text-sm overflow-x-auto" style={styles.text}>
-                {`// ${selectedExercise?.language} Solution
-// Implement your code here
-
-function solve() {
-  // Your code here
-}
-
-// Test your solution
-console.log(solve());`}
-              </pre>
-            </div>
-          </div>
+         
         </TabsContent>
 
         <TabsContent
@@ -964,44 +1033,26 @@ console.log(solve());`}
           )}
         </TabsContent>
 
-        <TabsContent
-          value="hints"
-          className="mt-4 p-4 rounded-lg"
-          style={{ backgroundColor: '#081c15' }}
-        >
-          <div className="space-y-4">
-            <div>
-              <h5 className="text-sm font-medium mb-2 flex items-center" style={styles.subtext}>
-                <ArrowRight className="h-4 w-4 mr-2" />
-                Hint 1
-              </h5>
-              <p style={styles.text}>Think about edge cases first.</p>
-            </div>
-            <div>
-              <h5 className="text-sm font-medium mb-2 flex items-center" style={styles.subtext}>
-                <ArrowRight className="h-4 w-4 mr-2" />
-                Hint 2
-              </h5>
-              <p style={styles.text}>Consider using a helper function to simplify the solution.</p>
-            </div>
-            <div>
-              <h5 className="text-sm font-medium mb-2 flex items-center" style={styles.subtext}>
-                <ArrowRight className="h-4 w-4 mr-2" />
-                Hint 3
-              </h5>
-              <p style={styles.text}>Remember to optimize for time complexity.</p>
-            </div>
-          </div>
-        </TabsContent>
+       
       </Tabs>
     </div>
 
     <DialogFooter className="flex justify-between items-center">
-      <Button variant="outline" style={styles.button}>
-        <CheckCircle className="h-4 w-4 mr-2" />
-        Mark As Complete
-      </Button>
-      <Button style={styles.accentButton}>Submit Solution</Button>
+    <Button
+  onClick={() => {
+    if (selectedExercise?.id) {
+      HandleMarkedStatus(selectedExercise.id); // Only call the function if id is defined
+    } else {
+      console.error("Exercise ID is undefined");
+    }
+  }}
+  variant="outline"
+  style={styles.accentButton}
+>
+  <CheckCircle className="h-4 w-4 mr-2" />
+  Mark As Complete
+</Button>
+     
     </DialogFooter>
   </DialogContent>
 </Dialog>

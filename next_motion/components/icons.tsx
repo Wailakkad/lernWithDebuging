@@ -15,7 +15,8 @@ import {
   Code2,     // For Icons.code
   Dumbbell,
   Cpu,       // For Icons.exercise (optional)
-  LayoutDashboard // For Icons.dashboard
+  LayoutDashboard, // For Icons.dashboard
+  Book          // For Icons.book
 } from "lucide-react";
 
 export const Icons = {
@@ -39,6 +40,7 @@ export const Icons = {
   solution: Sparkles,     // Reused Sparkles for solution
   exercise: Dumbbell,     // Optional: For exercises tab
   dashboard: LayoutDashboard, // New Dashboard icon
+  book: Book,             // New Book icon
   dot: () => (            // Custom dot icon
     <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor">
       <circle cx="4" cy="4" r="4" />
