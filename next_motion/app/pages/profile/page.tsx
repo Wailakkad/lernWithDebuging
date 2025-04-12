@@ -1,6 +1,6 @@
 // app/dashboard/page.tsx
 "use client";
-import { useState, useEffect, useMemo } from 'react';
+import React , { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import Link from 'next/link';
@@ -118,6 +118,14 @@ interface Exercise {
     code?: string;
   };
 }
+interface Course {
+  id: string;
+  title: string;
+  content: string;
+  language: string;
+  createdAt: string;
+}
+
 
 const API_BASE_URL = 'http://localhost:3001/api/actions';
 
@@ -127,6 +135,7 @@ export default function DeveloperDashboard() {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [debuggingSolutions, setDebuggingSolutions] = useState<DebuggingSolution[]>([]);
   const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [activeTab, setActiveTab] = useState("overview");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -236,6 +245,41 @@ export default function DeveloperDashboard() {
       console.error(err);
     }
   };
+  const fetchCourses = async () => {
+    try {
+      const { data } = await axios.get<{
+        message: string;
+        courses: Array<{
+          _id: string;
+          userId: string;
+          language: string;
+          courses: Array<{
+            title: string;
+            content: string;
+            _id: string;
+          }>;
+        }>;
+      }>(`${API_BASE_URL}/getCourses`, { withCredentials: true });
+  
+      if (data.courses) {
+        // Transform the API response to match your frontend interface
+        const transformedCourses = data.courses.flatMap((courseGroup) =>
+          courseGroup.courses.map((course) => ({
+            id: course._id,
+            title: course.title,
+            content: course.content,
+            language: courseGroup.language,
+            createdAt: courseGroup._id, // Assuming `_id` is used as a unique identifier
+          }))
+        );
+  
+        setCourses(transformedCourses);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error loading courses");
+      console.error(err);
+    }
+  };
   const handleDeleteExercise = async (exerciseId: string) => {
     try {
       // Make a DELETE request to the backend API
@@ -310,6 +354,8 @@ export default function DeveloperDashboard() {
       toast.error("An error occurred while deleting the submission.");
     }
   };
+
+
   
   // Load all data on component mount
   useEffect(() => {
@@ -321,7 +367,8 @@ export default function DeveloperDashboard() {
         await Promise.all([
           fetchUserData(),
           fetchDebuggingSolutions(),
-          fetchExercises()
+          fetchExercises(),
+          fetchCourses()
         ]);
       } catch (err) {
         console.error('Error loading data:', err);
@@ -409,7 +456,8 @@ export default function DeveloperDashboard() {
               { name: "overview", icon: Home, label: "Overview" },
               { name: "debugging", icon: Terminal, label: "Debugging Solutions" },
               { name: "exercises", icon: Dumbbell, label: "Exercises" },
-              { name: "progress", icon: BarChart3, label: "Progress" }
+              { name: "courses", icon: BookOpen, label: "Courses" },
+              
             ].map((item) => (
               <Button 
                 key={item.name}
@@ -514,198 +562,379 @@ export default function DeveloperDashboard() {
         
         {/* Dashboard content */}
         <div className="p-6">
-          {activeTab === "overview" && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Stats cards */}
-                {[
-                  { 
-                    title: "Debug Sessions", 
-                    value: debuggingSolutions.length, 
-                    delta: "+3 this week" 
-                  },
-                  { 
-                    title: "Completed Exercises", 
-                    value: exercises.filter(ex => ex.status === "Completed").length, 
-                    delta: "+5 this week" 
-                  },
-                  { 
-                    title: "Favorite Language", 
-                    value: "TypeScript", 
-                    delta: "23 sessions" 
-                  },
-                ].map((stat, idx) => (
-                  <Card key={idx} style={styles.card}>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-normal" style={styles.subtext}>{stat.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-baseline space-x-2">
-                        <span className="text-3xl font-bold" style={styles.text}>{stat.value}</span>
-                        <span style={styles.accent} className="text-sm">{stat.delta}</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-              
-              {/* Skills & Languages */}
-              <Card style={styles.card}>
-                <CardHeader>
-                  <CardTitle style={styles.text}>Programming Languages</CardTitle>
-                  <CardDescription style={styles.subtext}>Your skills and proficiency levels</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {user.languages.map((lang, index) => {
-                      const isAdvanced = lang.level === "Advanced";
-                      const proficiencyWidth = 
-                        lang.level === "Advanced" ? "90%" 
-                        : lang.level === "Intermediate" ? "60%" 
-                        : "30%";
-                      
-                      return (
-                        <div key={index} className="rounded-lg p-4 flex flex-col" style={styles.darkBg}>
-                          <div className="flex justify-between items-center">
-                            <span className="font-medium" style={styles.text}>{lang.name}</span>
-                            <Badge style={{ 
-                              backgroundColor: isAdvanced ? 'rgba(204, 255, 51, 0.2)' : 'rgba(82, 183, 136, 0.2)',
-                              color: isAdvanced ? '#ccff33' : '#52b788',
-                              borderColor: isAdvanced ? 'rgba(204, 255, 51, 0.3)' : 'rgba(82, 183, 136, 0.3)'
-                            }}>
-                              {lang.level}
-                            </Badge>
-                          </div>
-                          
-                          <div className="mt-4 h-2 rounded-full overflow-hidden" style={{ backgroundColor: '#0a2e23' }}>
-                            <div 
-                              className="h-full"
-                              style={{ 
-                                width: proficiencyWidth,
-                                backgroundColor: '#ccff33'
-                              }}
-                            ></div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
-              
-              {/* Recent activity */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card style={styles.card}>
-                  <CardHeader>
-                    <div className="flex justify-between items-center">
-                      <CardTitle style={styles.text}>Recent Debugging</CardTitle>
-                      <Button 
-                        variant="link" 
-                        className="p-0"
-                        style={styles.accent}
-                        onClick={() => setActiveTab("debugging")}
-                      >
-                        View All
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-  <div className="space-y-4">
-    {debuggingSolutions.length === 0 ? (
-      <div className="text-center py-8">
-        <FileCode className="h-12 w-12 mx-auto mb-4" style={{ color: '#52b788' }} />
-        <h4 className="text-lg font-medium" style={styles.text}>No debugging solutions saved</h4>
-        <p style={{ color: '#a7c6bc' }}>You haven't saved any debugging solutions yet. Start debugging to see them here!</p>
-      </div>
-    ) : (
-      debuggingSolutions.slice(0, 2).map((solution) => (
-        <div key={solution._id} className="flex flex-col space-y-4 p-4 rounded-lg transition-colors" style={styles.darkBg}>
-          <div className="flex items-center space-x-4">
-            <div className="p-3 rounded-full" style={{ backgroundColor: 'rgba(204, 255, 51, 0.15)' }}>
-              <FileCode className="h-6 w-6" style={styles.accent} />
+        {activeTab === "overview" && (
+  <div className="space-y-6">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Stats cards */}
+      {[
+        {
+          title: "Debug Sessions",
+          value: debuggingSolutions.length,
+          delta: "+3 this week",
+        },
+        {
+          title: "Completed Exercises",
+          value: exercises.filter((ex) => ex.status === "Completed").length,
+          delta: "+5 this week",
+        },
+        {
+          title: "Favorite Language",
+          value: "TypeScript",
+          delta: "23 sessions",
+        },
+      ].map((stat, idx) => (
+        <Card key={idx} style={styles.card}>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-normal" style={styles.subtext}>
+              {stat.title}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-baseline space-x-2">
+              <span className="text-3xl font-bold" style={styles.text}>
+                {stat.value}
+              </span>
+              <span style={styles.accent} className="text-sm">
+                {stat.delta}
+              </span>
             </div>
-            <div className="flex-1">
-              <div className="flex items-center justify-between">
-                <h4 className="font-medium text-lg" style={styles.text}>{solution.errorType}</h4>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+
+    {/* Skills & Languages */}
+    <Card style={styles.card}>
+      <CardHeader>
+        <CardTitle style={styles.text}>Programming Languages</CardTitle>
+        <CardDescription style={styles.subtext}>
+          Your skills and proficiency levels
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {user.languages.map((lang, index) => {
+            const isAdvanced = lang.level === "Advanced";
+            const proficiencyWidth =
+              lang.level === "Advanced"
+                ? "90%"
+                : lang.level === "Intermediate"
+                ? "60%"
+                : "30%";
+
+            return (
+              <div
+                key={index}
+                className="rounded-lg p-4 flex flex-col"
+                style={styles.darkBg}
+              >
+                <div className="flex justify-between items-center">
+                  <span className="font-medium" style={styles.text}>
+                    {lang.name}
+                  </span>
+                  <Badge
+                    style={{
+                      backgroundColor: isAdvanced
+                        ? "rgba(204, 255, 51, 0.2)"
+                        : "rgba(82, 183, 136, 0.2)",
+                      color: isAdvanced ? "#ccff33" : "#52b788",
+                      borderColor: isAdvanced
+                        ? "rgba(204, 255, 51, 0.3)"
+                        : "rgba(82, 183, 136, 0.3)",
+                    }}
+                  >
+                    {lang.level}
+                  </Badge>
+                </div>
+
+                <div
+                  className="mt-4 h-2 rounded-full overflow-hidden"
+                  style={{ backgroundColor: "#0a2e23" }}
+                >
+                  <div
+                    className="h-full"
+                    style={{
+                      width: proficiencyWidth,
+                      backgroundColor: "#ccff33",
+                    }}
+                  ></div>
+                </div>
               </div>
-              <div className="flex items-center space-x-2 text-sm mt-1" style={styles.subtext}>
-                <span>{solution.language}</span>
-                <span>•</span>
-                <span>{new Date(solution.createdAt).toLocaleDateString()}</span>
-              </div>
-            </div>
-            <Button variant="outline" size="sm" style={styles.button}>
-              View Details
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
+
+    {/* Recent activity */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Recent Debugging */}
+      <Card style={styles.card}>
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <CardTitle style={styles.text}>Recent Debugging</CardTitle>
+            <Button
+              variant="link"
+              className="p-0"
+              style={styles.accent}
+              onClick={() => setActiveTab("debugging")}
+            >
+              View All
             </Button>
           </div>
-
-          <div className="bg-opacity-50 p-4 rounded-lg" style={{ backgroundColor: '#0a2e23' }}>
-            <h5 className="text-sm font-medium mb-2" style={styles.subtext}>Error Analysis</h5>
-            <p className="text-sm mb-2" style={styles.text}>{solution.errorAnalysis.description}</p>
-          </div>
-        </div>
-      ))
-    )}
-  </div>
-</CardContent>
-                </Card>
-                
-                <Card style={styles.card}>
-                  <CardHeader>
-                    <div className="flex justify-between items-center">
-                      <CardTitle style={styles.text}>Recent Exercises</CardTitle>
-                      <Button 
-                        variant="link" 
-                        className="p-0"
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {debuggingSolutions.length === 0 ? (
+              <div className="text-center py-8">
+                <FileCode
+                  className="h-12 w-12 mx-auto mb-4"
+                  style={{ color: "#52b788" }}
+                />
+                <h4 className="text-lg font-medium" style={styles.text}>
+                  No debugging solutions saved
+                </h4>
+                <p style={{ color: "#a7c6bc" }}>
+                  You haven't saved any debugging solutions yet. Start debugging
+                  to see them here!
+                </p>
+              </div>
+            ) : (
+              debuggingSolutions.slice(0, 2).map((solution) => (
+                <div
+                  key={solution._id}
+                  className="flex flex-col space-y-4 p-4 rounded-lg transition-colors"
+                  style={styles.darkBg}
+                >
+                  <div className="flex items-center space-x-4">
+                    <div
+                      className="p-3 rounded-full"
+                      style={{
+                        backgroundColor: "rgba(204, 255, 51, 0.15)",
+                      }}
+                    >
+                      <FileCode
+                        className="h-6 w-6"
                         style={styles.accent}
-                        onClick={() => setActiveTab("exercises")}
-                      >
-                        View All
-                      </Button>
+                      />
                     </div>
-                  </CardHeader>
-                  <CardContent>
-  <div className="space-y-4">
-    {exercises.length === 0 ? (
-      <div className="text-center py-8">
-        <Dumbbell className="h-12 w-12 mx-auto mb-4" style={{ color: '#52b788' }} />
-        <h4 className="text-lg font-medium" style={styles.text}>No exercises saved</h4>
-        <p style={{ color: '#a7c6bc' }}>You haven't saved any exercises yet. Start practicing to see them here!</p>
-      </div>
-    ) : (
-      exercises.slice(0, 3).map((exercise) => (
-        <div key={exercise.id} className="flex items-center space-x-4 p-3 rounded-lg" style={styles.darkBg}>
-          <div className="p-2 rounded-full" style={{ backgroundColor: 'rgba(204, 255, 51, 0.15)' }}>
-            <Dumbbell className="h-5 w-5" style={styles.accent} />
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <h4
+                          className="font-medium text-lg"
+                          style={styles.text}
+                        >
+                          {solution.errorType}
+                        </h4>
+                      </div>
+                      <div
+                        className="flex items-center space-x-2 text-sm mt-1"
+                        style={styles.subtext}
+                      >
+                        <span>{solution.language}</span>
+                        <span>•</span>
+                        <span>
+                          {new Date(
+                            solution.createdAt
+                          ).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      style={styles.button}
+                    >
+                      View Details
+                    </Button>
+                  </div>
+
+                  <div
+                    className="bg-opacity-50 p-4 rounded-lg"
+                    style={{ backgroundColor: "#0a2e23" }}
+                  >
+                    <h5
+                      className="text-sm font-medium mb-2"
+                      style={styles.subtext}
+                    >
+                      Error Analysis
+                    </h5>
+                    <p
+                      className="text-sm mb-2"
+                      style={styles.text}
+                    >
+                      {solution.errorAnalysis.description}
+                    </p>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
-          <div className="flex-1">
-            <div className="flex items-center justify-between">
-              <h4 className="font-medium" style={styles.text}>{exercise.title}</h4>
-              <Badge style={{ 
-                backgroundColor: exercise.status === "Completed" ? 'rgba(204, 255, 51, 0.15)' : 'rgba(82, 183, 136, 0.15)',
-                color: exercise.status === "Completed" ? '#ccff33' : '#52b788',
-                borderColor: exercise.status === "Completed" ? 'rgba(204, 255, 51, 0.3)' : 'rgba(82, 183, 136, 0.3)'
-              }}>
-                {exercise.status}
-              </Badge>
-            </div>
-            <div className="flex items-center space-x-2 text-sm mt-1" style={styles.subtext}>
-              <span>{exercise.language}</span>
-              <span>•</span>
-              <span>{exercise.difficulty}</span>
-              <span>•</span>
-              <span>{exercise.date}</span>
-            </div>
-          </div>
+        </CardContent>
+      </Card>
+      {/* Recent Exercises */}
+<Card style={styles.card}>
+  <CardHeader>
+    <div className="flex justify-between items-center">
+      <CardTitle style={styles.text}>Recent Exercises</CardTitle>
+      <Button
+        variant="link"
+        className="p-0"
+        style={styles.accent}
+        onClick={() => setActiveTab("exercises")}
+      >
+        View All
+      </Button>
+    </div>
+  </CardHeader>
+  <CardContent>
+    <div className="space-y-4">
+      {exercises.length === 0 ? (
+        <div className="text-center py-8">
+          <Dumbbell
+            className="h-12 w-12 mx-auto mb-4"
+            style={{ color: "#52b788" }}
+          />
+          <h4 className="text-lg font-medium" style={styles.text}>
+            No exercises saved
+          </h4>
+          <p style={{ color: "#a7c6bc" }}>
+            You haven't saved any exercises yet. Start practicing to see them here!
+          </p>
         </div>
-      ))
-    )}
-  </div>
-</CardContent>
-                </Card>
+      ) : (
+        exercises.slice(0, 2).map((exercise, index) => (
+          <div
+            key={index}
+            className="flex flex-col space-y-4 p-4 rounded-lg transition-colors"
+            style={styles.darkBg}
+          >
+            <div className="flex items-center space-x-4">
+              <div
+                className="p-3 rounded-full"
+                style={{
+                  backgroundColor: "rgba(204, 255, 51, 0.15)",
+                }}
+              >
+                <Dumbbell className="h-6 w-6" style={styles.accent} />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <h4
+                    className="font-medium text-lg"
+                    style={styles.text}
+                  >
+                    {exercise.title}
+                  </h4>
+                </div>
+                <div
+                  className="flex items-center space-x-2 text-sm mt-1"
+                  style={styles.subtext}
+                >
+                  <span>{exercise.language}</span>
+                  <span>•</span>
+                  <span>{exercise.difficulty}</span>
+                  <span>•</span>
+                  <span>{exercise.date}</span>
+                </div>
               </div>
             </div>
-          )}
+          </div>
+        ))
+      )}
+    </div>
+  </CardContent>
+</Card>
+
+     
+     {/* Recent Courses */}
+<Card style={styles.card}>
+  <CardHeader>
+    <div className="flex justify-between items-center">
+      <CardTitle style={styles.text}>Recent Courses</CardTitle>
+      <Button
+        variant="link"
+        className="p-0"
+        style={styles.accent}
+        onClick={() => setActiveTab("courses")}
+      >
+        View All
+      </Button>
+    </div>
+  </CardHeader>
+  <CardContent>
+    <div className="space-y-4">
+      {courses.length === 0 ? (
+        <div className="text-center py-8">
+          <BookOpen
+            className="h-12 w-12 mx-auto mb-4"
+            style={{ color: "#52b788" }}
+          />
+          <h4 className="text-lg font-medium" style={styles.text}>
+            No courses saved
+          </h4>
+          <p style={{ color: "#a7c6bc" }}>
+            You haven't saved any courses yet. Start learning to see them here!
+          </p>
+        </div>
+      ) : (
+        courses.slice(0, 2).map((course, index) => (
+          <div
+            key={index}
+            className="flex flex-col space-y-4 p-4 rounded-lg transition-colors"
+            style={styles.darkBg}
+          >
+            <div className="flex items-center space-x-4">
+              <div
+                className="p-3 rounded-full"
+                style={{
+                  backgroundColor: "rgba(204, 255, 51, 0.15)",
+                }}
+              >
+                <BookOpen className="h-6 w-6" style={styles.accent} />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <h4
+                    className="font-medium text-lg"
+                    style={styles.text}
+                  >
+                    {course.title}
+                  </h4>
+                </div>
+                <div
+                  className="flex items-center space-x-2 text-sm mt-1"
+                  style={styles.subtext}
+                >
+                  <span>{course.language}</span>
+                  <span>•</span>
+                  <span>{new Date(course.createdAt).toLocaleDateString()}</span>
+                </div>
+              </div>
+            </div>
+            <div className="p-4 rounded-lg" style={{ backgroundColor: "#081c15" }}>
+              <h5 className="text-sm font-medium mb-2" style={styles.subtext}>
+                Content
+              </h5>
+              <p
+                className="text-sm"
+                style={styles.text}
+                dangerouslySetInnerHTML={{
+                  __html: course.content.length > 200
+                    ? `${course.content.substring(0, 200)}...`
+                    : course.content,
+                }}
+              ></p>
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  </CardContent>
+</Card>
+    </div>
+  </div>
+)}
           
           {activeTab === "debugging" && (
             <Card style={styles.card}>
@@ -883,28 +1112,87 @@ export default function DeveloperDashboard() {
               </CardFooter>
             </Card>
           )}
-          
-          {activeTab === "progress" && (
-            <Card style={styles.card}>
-              <CardHeader>
-                <CardTitle style={styles.text}>Progress Tracking</CardTitle>
-                <CardDescription style={styles.subtext}>Track your learning journey</CardDescription>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <AlertCircle className="h-12 w-12 mb-4" style={styles.subtext} />
-                  <h3 className="text-xl font-medium mb-2" style={styles.text}>Feature Coming Soon</h3>
-                  <p className="max-w-md" style={styles.subtext}>
-                    We're working on advanced progress tracking features to help you visualize your growth
-                    and identify areas for improvement.
-                  </p>
-                  <Button className="mt-6" style={styles.accentButton}>
-                    Get Notified
-                  </Button>
+   {activeTab === "courses" && (
+  <Card className="border-0 shadow-lg" style={{ backgroundColor: '#0a2e22', color: '#d8f3dc' }}>
+    <CardHeader>
+      <CardTitle style={styles.text}>Courses</CardTitle>
+      <CardDescription style={styles.subtext}>
+        Explore your saved learning modules
+      </CardDescription>
+    </CardHeader>
+    <CardContent>
+      <div className="space-y-6">
+        {courses.length === 0 ? (
+          <div className="text-center py-8">
+            <BookOpen className="h-12 w-12 mx-auto mb-4" style={{ color: '#52b788' }} />
+            <h4 className="text-lg font-medium" style={styles.text}>
+              No courses found
+            </h4>
+            <p style={{ color: '#a7c6bc' }}>
+              Start saving courses to see them here!
+            </p>
+          </div>
+        ) : (
+          courses.map((course, index) => (
+            <div
+              key={course.id}
+              className="p-6 rounded-lg transition-colors"
+              style={{ backgroundColor: 'black' }}
+            >
+              {/* Course Header */}
+              <div className="flex items-center space-x-4 mb-4">
+                <div
+                  className="p-3 rounded-full"
+                  style={{
+                    backgroundColor: 'rgba(204, 255, 51, 0.15)',
+                  }}
+                >
+                  <BookOpen className="h-6 w-6" style={styles.accent} />
                 </div>
-              </CardContent>
-            </Card>
-          )}
+                <div className="flex-1">
+                  <h4 className="font-medium text-lg" style={styles.text}>
+                    {course.title}
+                  </h4>
+                  <div className="flex items-center space-x-2 text-sm mt-1" style={styles.subtext}>
+                    <span>{course.language}</span>
+                    <span>•</span>
+                    <span>{new Date(course.createdAt).toLocaleDateString()}</span>
+                  </div>
+                </div>
+                
+                {/* Badge similar to image */}
+                <div className="ml-auto mr-2">
+                  <span className="px-3 py-1 text-xs rounded-full font-medium" 
+                        style={{ backgroundColor: 'rgba(2, 132, 199, 0.2)', color: '#38bdf8' }}>
+                    Learning Module {index + 1}
+                  </span>
+                </div>
+                
+                <button className='px-3 py-2 rounded-2xl font-bold bg-red-600 text-white'>Delete</button>
+              </div>
+              
+              {/* Course Content with Enhanced Educational Styling */}
+              <div className="mt-4 rounded-lg overflow-hidden border border-gray-700">
+                {renderCourseContent(course.content)}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </CardContent>
+    <CardFooter className="border-t flex justify-center py-4" style={{ borderColor: '#52b788' }}>
+      <Button
+        style={styles.accentButton}
+        className="hover:bg-opacity-90"
+        onClick={() => toast.info('Feature to add new courses coming soon!')}
+      >
+        <BookOpen className="h-4 w-4 mr-2" />
+        Add New Course
+      </Button>
+    </CardFooter>
+  </Card>
+)}
+       
         </div>
       </main>
       
@@ -1059,3 +1347,279 @@ export default function DeveloperDashboard() {
     </div>
   );
 }
+
+const sanitizeContent = (content: string): string => {
+  return content
+    .replace(/\*\*/g, '') // Remove double asterisks
+    .replace(/`/g, '') // Remove backticks
+    .replace(/\/{2,}/g, '') // Remove multiple slashes
+    .replace(/\.\.+/g, '.') // Replace multiple dots with a single dot
+    .trim(); // Remove leading and trailing whitespace
+};
+
+function renderCourseContent(content: string) {
+  if (!content) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 bg-gray-900/50 rounded-lg border border-gray-800">
+        <BookOpen className="h-10 w-10 text-gray-500 mb-2" />
+        <p className="text-gray-400 text-sm font-medium">No content available for this module</p>
+      </div>
+    );
+  }
+  
+  const sanitizedContent = sanitizeContent(content);
+  const sections = sanitizedContent.split('\n\n');
+  
+  // Track important content markers
+  let hasTitle = false;
+  let currentSection = "intro";
+  
+  return (
+    <div className="overflow-hidden rounded-lg border border-gray-800 bg-gray-900/30">
+      {/* Course content header with navigation dots */}
+      <div className="flex items-center px-4 py-2 bg-gray-800/80 border-b border-gray-700">
+        <div className="flex space-x-1.5 mr-4">
+          <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
+          <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+          <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
+        </div>
+        <div className="h-5 w-px bg-gray-700 mx-2"></div>
+        <div className="text-xs font-medium text-gray-400">
+          {sections.length} sections
+        </div>
+      </div>
+      
+      {/* Course content body */}
+      <div className="divide-y divide-gray-800/70">
+        {sections.map((section, sectionIndex) => {
+          // Identify section type
+          const isTitle = sectionIndex === 0 && !section.startsWith('```') && section.length < 100;
+          const isHeading = !isTitle && (section.startsWith('# ') || section.startsWith('## ') || section.startsWith('### '));
+          const isPracticalExample = section.toLowerCase().includes('practical example') || 
+                                    section.toLowerCase().includes('example:');
+          const isCode = section.trim().startsWith('```') && section.trim().endsWith('```');
+          
+          // Update current section tracker for styling context
+          if (isHeading || isPracticalExample) {
+            if (section.toLowerCase().includes('example')) {
+              currentSection = "example";
+            } else if (section.toLowerCase().includes('practice')) {
+              currentSection = "practice";
+            } else if (section.toLowerCase().includes('summary') || section.toLowerCase().includes('conclusion')) {
+              currentSection = "summary";
+            }
+          }
+          
+          // Title section
+          if (isTitle && !hasTitle) {
+            hasTitle = true;
+            return (
+              <div key={sectionIndex} className="bg-gradient-to-r from-blue-900/40 to-indigo-900/40">
+                <div className="px-5 py-4 border-l-4 border-blue-500">
+                  <h2 className="text-xl font-bold text-blue-300">{section}</h2>
+                </div>
+              </div>
+            );
+          }
+          
+          // Heading sections
+          if (isHeading) {
+            const headingText = section.replace(/^#+\s+/, '');
+            const headingLevel = section.match(/^#+/)?.[0].length || 1;
+            
+            let headingColor = "text-emerald-400";
+            let borderColor = "border-emerald-500/70";
+            let bgColor = "from-emerald-900/30 to-emerald-900/10";
+            
+            // Adjust styling based on section context
+            if (currentSection === "example") {
+              headingColor = "text-amber-400";
+              borderColor = "border-amber-500/70";
+              bgColor = "from-amber-900/30 to-amber-900/10";
+            } else if (currentSection === "practice") {
+              headingColor = "text-purple-400";
+              borderColor = "border-purple-500/70";
+              bgColor = "from-purple-900/30 to-purple-900/10";
+            } else if (currentSection === "summary") {
+              headingColor = "text-blue-400";
+              borderColor = "border-blue-500/70";
+              bgColor = "from-blue-900/30 to-blue-900/10";
+            }
+            
+            return (
+              <div key={sectionIndex} className={`bg-gradient-to-r ${bgColor}`}>
+                <div className={`px-5 py-3 border-l-4 ${borderColor}`}>
+                  <h3 className={`${headingLevel === 1 ? 'text-lg' : 'text-base'} font-semibold ${headingColor}`}>
+                    {headingText}
+                  </h3>
+                </div>
+              </div>
+            );
+          }
+          
+          // Practical example sections
+          if (isPracticalExample) {
+            return (
+              <div key={sectionIndex} className="bg-gradient-to-r from-amber-900/30 to-amber-900/10">
+                <div className="px-5 py-3 border-l-4 border-amber-500/70 flex items-center">
+                  <span className="p-1 rounded-md bg-amber-500/20 mr-2">
+                    <CodeIcon className="h-4 w-4 text-amber-400" />
+                  </span>
+                  <h4 className="text-md font-semibold text-amber-400">{section}</h4>
+                </div>
+              </div>
+            );
+          }
+          
+          // Code blocks
+          if (isCode) {
+            // Extract language and content
+            const languageMatch = section.trim().match(/^```(\w+)/);
+            const codeLanguage = languageMatch ? languageMatch[1] : '';
+            const content = section.replace(/```(\w+)?|```/g, '').trim();
+            const lines = content.split('\n');
+            
+            // Language-specific styling
+            let languageColor = "text-blue-300";
+            let languageBg = "bg-blue-500/20";
+            
+            if (codeLanguage === "javascript" || codeLanguage === "js") {
+              languageColor = "text-yellow-300";
+              languageBg = "bg-yellow-500/20";
+            } else if (codeLanguage === "typescript" || codeLanguage === "ts") {
+              languageColor = "text-blue-300";
+              languageBg = "bg-blue-500/20";
+            } else if (codeLanguage === "python" || codeLanguage === "py") {
+              languageColor = "text-green-300";
+              languageBg = "bg-green-500/20";
+            } else if (codeLanguage === "html") {
+              languageColor = "text-orange-300";
+              languageBg = "bg-orange-500/20";
+            } else if (codeLanguage === "css") {
+              languageColor = "text-purple-300";
+              languageBg = "bg-purple-500/20";
+            }
+            
+            return (
+              <div key={sectionIndex} className="bg-gray-900 border-y border-gray-800">
+                {/* Code header */}
+                <div className="flex items-center justify-between px-4 py-2 bg-gray-800/80">
+                  <div className="flex items-center">
+                    <div className="flex space-x-1.5">
+                      <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
+                      <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+                      <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
+                    </div>
+                    
+                    {codeLanguage && (
+                      <>
+                        <div className="h-4 w-px bg-gray-700 mx-3"></div>
+                        <span className={`px-2 py-0.5 rounded text-xs font-mono font-medium ${languageColor} ${languageBg}`}>
+                          {codeLanguage}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs text-gray-400">{lines.length} lines</span>
+                    <div className="h-4 w-px bg-gray-700 mx-1"></div>
+                    <button className="text-gray-400 hover:text-gray-300">
+                      <ClipboardIcon className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+                
+                {/* Code content */}
+                <div className="flex">
+                  {/* Line numbers */}
+                  <div className="py-2 text-right px-2 select-none bg-gray-800/40 w-12">
+                    {lines.map((_, i) => (
+                      <div key={i} className="text-xs font-mono text-gray-500 leading-relaxed px-2">
+                        {i + 1}
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* Code with syntax highlighting */}
+                  <div className="py-2 pl-4 pr-6 overflow-x-auto w-full">
+                    <code className="font-mono text-sm text-gray-200">
+                      {lines.map((line, i) => (
+                        <div key={i} className="leading-relaxed">
+                          {/* Enhanced syntax highlighting patterns */}
+                          {line
+                            // Keywords
+                            .replace(/\b(interface|class|constructor|extends|implements|public|private|protected|static|async|await|import|export|from|as|default|type)\b/g, 
+                              match => `<span class="text-pink-400">${match}</span>`)
+                            // Flow control
+                            .replace(/\b(if|else|for|while|do|switch|case|break|continue|return|yield|throw|try|catch|finally|in|of)\b/g, 
+                              match => `<span class="text-blue-400">${match}</span>`)
+                            // Variable declarations
+                            .replace(/\b(const|let|var|function)\b/g, 
+                              match => `<span class="text-violet-400">${match}</span>`)
+                            // Types
+                            .replace(/\b(string|number|boolean|any|void|null|undefined|never|object|symbol|bigint|unknown|this)\b/g, 
+                              match => `<span class="text-green-400">${match}</span>`)
+                            // String literals
+                            .replace(/(".*?"|'.*?'|`.*?`)/g, 
+                              match => `<span class="text-amber-300">${match}</span>`)
+                            // Numbers
+                            .replace(/\b(\d+\.?\d*)\b/g, 
+                              match => `<span class="text-orange-400">${match}</span>`)
+                            // Boolean & null literals
+                            .replace(/\b(true|false|null|undefined)\b/g, 
+                              match => `<span class="text-purple-400">${match}</span>`)
+                            // Custom types (capitalized words)
+                            .replace(/\b([A-Z][a-zA-Z0-9_]*)\b/g, 
+                              match => `<span class="text-teal-300">${match}</span>`)
+                            // Methods & properties
+                            .replace(/(\.\s*[a-zA-Z_][a-zA-Z0-9_]*)/g, 
+                              match => `<span class="text-blue-300">${match}</span>`)
+                            // Comments
+                            .replace(/(\/\/.*$|\/\*[\s\S]*?\*\/)/g, 
+                              match => `<span class="text-gray-500 italic">${match}</span>`)
+                          }
+                        </div>
+                      ))}
+                    </code>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+          
+          // Regular paragraphs
+          return (
+            <div key={sectionIndex} className="px-5 py-3 bg-gray-900/50">
+              <p className="text-sm leading-relaxed text-gray-300">
+                {section.split('\n').map((line, lineIndex) => (
+                  <React.Fragment key={lineIndex}>
+                    {/* Process inline code in text */}
+                    {line.replace(/`([^`]+)`/g, '<code class="px-1.5 py-0.5 rounded bg-gray-800 text-xs font-mono text-gray-200">$1</code>')}
+                    {lineIndex < section.split('\n').length - 1 && <br />}
+                  </React.Fragment>
+                ))}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+import { Code as LucideCodeIcon } from 'lucide-react';// Assumed component for the CodeIcon
+const ClipboardIconArrow = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <polyline points="16 18 22 12 16 6"></polyline>
+    <polyline points="8 6 2 12 8 18"></polyline>
+  </svg>
+);
+
+// Assumed component for the ClipboardIcon
+const ClipboardIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+    <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+  </svg>
+);

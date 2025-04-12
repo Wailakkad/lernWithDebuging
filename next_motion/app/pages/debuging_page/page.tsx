@@ -26,6 +26,7 @@ import {
   CardContent,
   CardFooter,
 } from '@/components/ui/card';
+
 import  { Components } from 'react-markdown';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -231,7 +232,7 @@ export default function CodeDebugger() {
           language: 'javascript',
         })),
       };
-  
+     
       await SaveExercises(exercisesToSave);
       toast.success('Exercises saved successfully!');
     } catch (err) {
@@ -242,6 +243,32 @@ export default function CodeDebugger() {
     }
   };
 
+  const handleCourseSave = async () => {
+    if (!isDebugResponse(result) || !result.course?.length) {
+      toast.error('No courses to save');
+      return;
+    }
+  
+  
+    try {
+      const coursesToSave = result.course.map((course) => ({
+        title: course.title || 'Untitled Course',
+        content: course.content || 'No content available',
+      }));
+  
+      // Replace this with your actual API call to save courses
+      const response = await axios.post('http://localhost:3001/api/actions/saveCourses', { courses: coursesToSave , language } , {withCredentials : true});
+       if (response.status === 400){
+        toast.error('Missing required fields.');
+       }else if(response.status === 201){
+        toast.success('Courses saved successfully!');
+
+       }
+    } catch (err) {
+      console.error('Error saving courses:', err);
+      toast.error('Failed to save courses');
+    } 
+  };
   const isDebugResponse = (result: DebugResponse | DebugError | null): result is DebugResponse => {
     return result !== null && 'correctedCode' in result;
   };
@@ -510,6 +537,19 @@ export default function CodeDebugger() {
                           Save exercices
                         </>
                       )}
+                    </Button>
+                    )
+                  }
+                  {
+                    result.course && result.course.length > 0 && (
+                      <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="bg-green-500/20 text-green-400 border-green-500/30 hover:bg-green-500/30"
+                      onClick={handleCourseSave}
+                      // disabled={isSaving}
+                    >
+                      Save courses
                     </Button>
                     )
                   }
