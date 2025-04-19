@@ -26,7 +26,7 @@ export async function debugWithQwen(request: DebugRequest): Promise<string> {
 
   const response = await groq.chat.completions.create({
     messages: [{ role: 'user', content: prompt }],
-    model: 'qwen-2.5-coder-32b',
+    model: 'compound-beta-mini',
     temperature: 0.6,
     max_tokens: 2000
   });
@@ -91,7 +91,7 @@ export async function generateExercice(request: DebugRequest): Promise<string> {
   
     const response = await groq.chat.completions.create({
       messages: [{ role: 'user', content: prompt }],
-      model: 'qwen-2.5-coder-32b',
+      model: 'compound-beta-mini',
       temperature: 0.65, // Slightly higher temperature for creative but practical exercises
       max_tokens: 4000
     });
@@ -144,7 +144,7 @@ export async function generateExercice(request: DebugRequest): Promise<string> {
   
       const response = await groq.chat.completions.create({
         messages: [{ role: 'user', content: prompt }],
-        model: 'qwen-2.5-coder-32b',
+        model: 'compound-beta-mini',
         temperature: 0.7, // Slightly higher temperature for creative and detailed responses
         max_tokens: 4000,
       });

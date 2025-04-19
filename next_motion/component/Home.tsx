@@ -58,7 +58,7 @@ const exampleImages = [
 function LandingHero() {
   const {isAuthenticated} = useAuth();
   return (
-    <section className="w-full h-screen overflow-hidden md:overflow-visible flex flex-col items-center justify-center relative">
+    <section className="w-full h-screen overflow-hidden md:overflow-visible flex flex-col items-center justify-center relative ">
       <Floating sensitivity={-0.5} className="h-full">
         <FloatingElement
           depth={0.5}

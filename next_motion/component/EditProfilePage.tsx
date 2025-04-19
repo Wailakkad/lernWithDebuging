@@ -6,6 +6,9 @@ import { useAuth } from "../context/AuthContext";
 import { ArrowLeft, Upload, Camera } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import axios from "axios";
+import { toast } from "sonner";
+
 
 const DEVELOPMENT_TYPES = [
   "Front End",
@@ -223,15 +226,34 @@ const EditProfilePage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-
+  
     try {
-        console.log(formData)
-      
-
-      
-    } catch (error) {
-      setFormStatus({ type: "error", message: "Failed to update profile. Please try again." });
-    } 
+      // Send the formData to the server
+      const response = await axios.post(
+        "http://localhost:3001/api/actions/editProfile", // Replace with your actual API endpoint
+        { formData }, // Send the formData in the request body
+        {
+          withCredentials: true, 
+        }
+      );
+  
+      if (response.status === 200) {
+        setFormStatus({ type: "success", message: "Profile updated successfully!" });
+        toast.success("Profile updated successfully!")
+        setIsDirty(false); 
+        fetchUser(); 
+      } else {
+        setFormStatus({ type: "error", message: response.data.message || "Failed to update profile." });
+      }
+    } catch (error: any) {
+      console.error("Error updating profile:", error);
+      setFormStatus({
+        type: "error",
+        message: error.response?.data?.message || "An unexpected error occurred. Please try again.",
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (loadingUser) {

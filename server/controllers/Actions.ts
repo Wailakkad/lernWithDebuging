@@ -364,6 +364,40 @@ export const deleteExercise = async (req: AuthRequest, res: Response): Promise<v
   }
 };
 
+export const editProfile = async (req: AuthRequest, res: Response): Promise<void> => {
+  const userId = req.user?.id;
+  const { formData } = req.body;
+
+  if (!userId || !formData) {
+    res.status(400).json({ message: "Missing user ID or form data." });
+    return;
+  }
+
+  try {
+    // Update only the fields provided in formData
+    const response = await UserModel.findByIdAndUpdate(
+      userId, // Find the user by ID
+      { $set: formData }, // Update only the fields provided in formData
+      { new: true, runValidators: true } // Return the updated document and validate the changes
+    );
+
+    if (!response) {
+      res.status(404).json({ message: "User not found." });
+      return;
+    }
+
+    res.status(200).json({
+      message: "Profile updated successfully.",
+      user: response, // Return the updated user profile
+    });
+  } catch (err: any) {
+    console.error("Error editing profile:", err);
+    res.status(500).json({
+      message: "Internal server error.",
+    });
+  }
+};
+
 
 
 

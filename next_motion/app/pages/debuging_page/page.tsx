@@ -11,6 +11,7 @@ import { SaveExercises } from '@/utils/SaveExercices';
 import { SaveExerciseParams } from '@/utils/SaveExercices';
 import { useAuth } from '@/context/AuthContext';
 import { useProtectedRoute } from '@/hooks/useProtectRoute'; 
+import imgLogo from "/logoApp.png"
 
 import {
   Tabs,
@@ -279,12 +280,8 @@ export default function CodeDebugger() {
       <header className="border-b border-gray-800 py-4 bg-gray-900/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 flex justify-between items-center">
           <div className="flex items-center space-x-3">
-
-            <Icons.logo/>
-            <div>
-              <h1 className="text-xl font-bold text-green-400">Code Debugger AI</h1>
-              <p className="text-sm text-gray-400">Intelligent debugging powered by AI</p>
-            </div>
+                      
+                     <img src="/logoApp.png" alt="" width="90px" />         
           </div>
           <div className="flex items-center space-x-4">
             <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
