@@ -280,8 +280,7 @@ export default function CodeDebugger() {
       <header className="border-b border-gray-800 py-4 bg-gray-900/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 flex justify-between items-center">
           <div className="flex items-center space-x-3">
-                      
-                     <img src="/logoApp.png" alt="" width="90px" />         
+                       <h1>Debuging session</h1>
           </div>
           <div className="flex items-center space-x-4">
             <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">

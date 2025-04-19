@@ -2,7 +2,9 @@
 
 import { SplineScene } from "@/components/ui/splite";
 import { Card } from "@/components/ui/card"
+import Link from "next/link";
 import { Spotlight } from "@/components/ui/spotlight"
+import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button";
  
 export default function SplineSceneBasic() {
   return (
@@ -47,14 +49,12 @@ export default function SplineSceneBasic() {
                 <p className="text-white font-medium">Powered by Compound-Beta-Mini</p>
               </div>
             </div>
-            <button className="bg-white text-black px-6 py-2 rounded-lg font-medium hover:bg-gray-200 transition">
-              Try Debugger
-            </button>
+           <Link href="/pages/debuging_page" className="cursor-pointer">
+             <InteractiveHoverButton/>
+              </Link>
           </div>
         </div>
       </Card>
-      
-     
     </div>
   )
 }
