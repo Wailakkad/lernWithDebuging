@@ -4,11 +4,13 @@ import { SplineScene } from "@/components/ui/splite";
 import { Card } from "@/components/ui/card"
 import Link from "next/link";
 import { Spotlight } from "@/components/ui/spotlight"
-import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button";
+import { GradientButton } from "@/components/ui/gradient-button"
+import AboutMain from "@/component/AboutMain";
+
  
 export default function SplineSceneBasic() {
   return (
-    <div className="flex flex-col items-center bg-black px-12">
+    <div className="flex flex-col items-center bg-black px-12 overflow-hidden">
         
       <Card className="w-full h-screen bg-black/[0.96] relative overflow-hidden">
         <Spotlight
@@ -40,21 +42,22 @@ export default function SplineSceneBasic() {
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-6">
           <div className="flex justify-between items-center">
             <div className="flex space-x-4">
-              <div className="bg-blue-900/30 px-4 py-2 rounded-lg">
-                <p className="text-sm text-blue-300">Error Analysis</p>
+              <div className="bg-[#1d4549] px-4 py-2 rounded-lg">
+                <p className="text-sm text-[#aacc00]">Error Analysis</p>
                 <p className="text-white font-medium">Powered by Qwen-Coder-25</p>
               </div>
-              <div className="bg-purple-900/30 px-4 py-2 rounded-lg">
-                <p className="text-sm text-purple-300">Exercises & Lessons</p>
+              <div className="bg-[#243b37] px-4 py-2 rounded-lg">
+                <p className="text-sm text-[#aacc00]">Exercises & Lessons</p>
                 <p className="text-white font-medium">Powered by Compound-Beta-Mini</p>
               </div>
             </div>
-           <Link href="/pages/debuging_page" className="cursor-pointer">
-             <InteractiveHoverButton/>
+           <Link href="/pages/debuging_page">
+           <GradientButton variant="variant">Get Started</GradientButton>
               </Link>
           </div>
         </div>
       </Card>
+      <AboutMain/>
     </div>
   )
 }

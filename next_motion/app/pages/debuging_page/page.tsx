@@ -151,7 +151,7 @@ export default function CodeDebugger() {
     try {
       const response = await axios.post<DebugResponse>('http://localhost:3001/api/debug', requestData);
       setResult(response.data);
-      console.log('Debugging result:', response.data.exercises);
+      console.log('Debugging result:', response.data);
       console.log('Courses:', response.data.course);
       toast.success('Code analyzed successfully'); // Updated toast
     } catch (err) {

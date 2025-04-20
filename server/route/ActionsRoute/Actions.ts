@@ -13,27 +13,30 @@ import {
   deleteSubmission,
   saveCourses,
   editProfile,
+  deleteCourse
 } from '../../controllers/Actions';
 import { authVerify } from '../../utils/authVerify';
-import UserModel from '../../database/models/User';
+import Course from '../../database/models/Course';
 
 // Define routes
 router.post('/saveSubmission', authVerify, saveSubmission);
 router.post('/saveExercices', authVerify, saveExercices);
+router.post('/MarkStatusExercice/:exerciseId', authVerify, MarkStatusExercice);
+router.post('/editProfile', authVerify, editProfile);
+router.post('/saveCourses', authVerify, saveCourses);
 router.get('/getSubmissions', authVerify, getSubmissions);
 router.get('/getUser', authVerify, getUser);
+router.get('/getCourses', authVerify, getCourses);
+router.get('/getCourses', authVerify, getCourses);
 router.get('/getExercises', authVerify, getExercises);
 router.delete('/deleteExercise/:exerciseId', authVerify, deleteExercise);
-router.post('/MarkStatusExercice/:exerciseId', authVerify, MarkStatusExercice);
 router.delete('/deleteSubmission/:submissionId', authVerify, deleteSubmission);
-router.post('/saveCourses', authVerify, saveCourses);
-router.get('/getCourses', authVerify, getCourses);
-router.post('/editProfile', authVerify, editProfile);
+router.delete('/deleteCourse/:courseId', authVerify, deleteCourse);
 
 // Fetch all users
-router.get('/users', async (req: Request, res: Response): Promise<void> => {
+router.get('/course', async (req: Request, res: Response): Promise<void> => {
   try {
-    const response = await UserModel.find(); // Fetch all users
+    const response = await Course.find(); // Fetch all users
     res.json(response); // Send the response
   } catch (err) {
     console.error("Error fetching users:", err); // Log the error

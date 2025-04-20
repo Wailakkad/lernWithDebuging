@@ -354,6 +354,27 @@ export default function DeveloperDashboard() {
       toast.error("An error occurred while deleting the submission.");
     }
   };
+  const handleDeleteCourses = async (courseId: string) => {
+    try {
+      // Make a DELETE request to the backend API
+      const response = await axios.delete(`${API_BASE_URL}/deleteCourse/${courseId}`, {
+        withCredentials: true, // Include credentials for authentication
+      });
+  
+      if (response.status === 200) {
+        // Remove the deleted exercise from the state
+        setCourses((prevCourses) =>
+          prevCourses.filter((course) => course.id !== courseId)
+        );
+        toast.success('Course deleted successfully');
+      } else {
+        toast.error('Failed to delete course:', response.data.message);
+      }
+    } catch (err) {
+      console.error('Error deleting course:', err);
+      
+    }
+  };
 
 
   
@@ -1134,12 +1155,14 @@ export default function DeveloperDashboard() {
           </div>
         ) : (
           courses.map((course, index) => (
+            
             <div
               key={course.id}
               className="p-6 rounded-lg transition-colors"
               style={{ backgroundColor: 'black' }}
             >
               {/* Course Header */}
+              <h1>{course.id}</h1>
               <div className="flex items-center space-x-4 mb-4">
                 <div
                   className="p-3 rounded-full"
@@ -1168,7 +1191,7 @@ export default function DeveloperDashboard() {
                   </span>
                 </div>
                 
-                <button className='px-3 py-2 rounded-2xl font-bold bg-red-600 text-white'>Delete</button>
+                <button onClick={()=>{handleDeleteCourses(course.id)}} className='px-3 py-2 rounded-2xl font-bold bg-red-600 text-white'>Delete</button>
               </div>
               
               {/* Course Content with Enhanced Educational Styling */}

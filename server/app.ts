@@ -30,4 +30,7 @@ connectDB();
 app.listen((port), ()=>{
     console.log(`Server is running on port ${port}`);
     console.log(`http://localhost:${port}`);
+    // Add this to your API code temporarily
+console.log("MongoDB URI:", process.env.MONGO_URI);
+ 
 })
